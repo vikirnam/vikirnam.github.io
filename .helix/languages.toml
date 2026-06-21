@@ -1,0 +1,29 @@
+[[language]]
+name = "typescript"
+shebangs = ["deno"]
+roots = ["deno.json", "deno.jsonc"]
+file-types = ["js", "ts", "jsx", "tsx"]
+language-servers = ["deno-lsp", "tailwindcss-ls"]
+auto-format = true
+
+[[language]]
+name = "html"
+language-servers = [ "vscode-html-language-server", "tailwindcss-ls" ]
+
+[[language]]
+name = "css"
+language-servers = [ "vscode-css-language-server", "tailwindcss-ls" ]
+
+[language-server.astro-ls]
+command = "astro-ls"
+args = [ "--stdio" ]
+
+[[language]]
+name = "astro"
+scope = "source.astro"
+injection-regex = "astro"
+file-types = ["astro"]
+roots = ["package.json", "astro.config.mjs"]
+language-servers = [ "astro-ls", "tailwindcss-ls" ]
+auto-format = true
+formatter = { command = "prettier", args = ["--parser", "astro"] }
