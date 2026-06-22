@@ -1,0 +1,45 @@
+---
+import BaseLayout from "@layouts/BaseLayout.astro";
+import PinnedPost from "@components/writings/PinnedPost.astro";
+
+import { getCollection } from "astro:content";
+import FilterTabs from "@components/writings/FilterTabs.astro";
+import PostRow from "@components/writings/PostRow.astro";
+
+const posts = await getCollection("writings", ({ data }) => !data.draft);
+posts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const pinned = posts.find((p) => p.data.shouldFeature);
+const rest = posts.filter((p) => p.id !== pinned?.id);
+---
+
+<BaseLayout pageTitle="writings">
+    <div
+        class="grid grid-cols-2 gap-12 items-end pb-14 border-b border-neutral-200 mb-14"
+    >
+        <h1 class="text-5xl font-medium tracking-tighter leading-none">
+            Writings<span class="text-purple-700">.</span>
+        </h1>
+        <!-- TODO: Writing subtitle -->
+        <!-- <p class="text-sm text-neutral-500 leading-relaxed"></p> -->
+    </div>
+
+    <FilterTabs />
+
+    <p
+        class="font-mono text-xs uppercase tracking-widest text-neutral-400 dark:text-neutral-300 mb-3"
+    >
+        pinned
+    </p>
+
+    {pinned && <PinnedPost post={pinned} />}
+
+    <p
+        class="font-mono text-xs uppercase tracking-widest text-neutral-400 dark:text-neutral-300 mt-10 mb-3"
+    >
+        all posts
+    </p>
+    <div id="post-list">
+        {rest.map((post) => <PostRow post={post} />)}
+    </div>
+</BaseLayout>

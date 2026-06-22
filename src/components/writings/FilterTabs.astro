@@ -1,0 +1,48 @@
+---
+import { getCollection } from "astro:content";
+
+const posts = await getCollection("writings", ({ data }) => !data.draft);
+const tags = [...new Set(posts.map((post) => post.data.tags).flat())];
+---
+
+<div>
+    <ul class="flex gap-3">
+        <li>
+            <button data-filter="all" class="filter-btn active">all</button>
+        </li>
+        {
+            tags.map((tag) => (
+                <li>
+                    <button data-filter={tag} class="filter-btn">
+                        {tag}
+                    </button>
+                </li>
+            ))
+        }
+    </ul>
+</div>
+
+<script>
+    const btns = document.querySelectorAll(
+        ".filter-btn",
+    ) as NodeListOf<HTMLElement>;
+    const rows = document.querySelectorAll(
+        ".post-row",
+    ) as NodeListOf<HTMLElement>;
+
+    btns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const filter = btn.dataset.filter;
+
+            btns.forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+
+            rows.forEach((row) => {
+                const match =
+                    filter === "all" ||
+                    (filter && row.dataset.tags?.includes(filter));
+                row.style.display = match ? "" : "none";
+            });
+        });
+    });
+</script>

@@ -1,0 +1,19 @@
+---
+import { FaGithub, FaLinkedin } from "react-icons/fa";
+import FooterLink from "./FooterLink.astro";
+---
+
+<footer class="border-t border-neutral-200 mt-24">
+    <div class="max-w-4xl mx-auto px-6 py-8 flex justify-between items-center">
+        <span class="font-mono text-xs text-neutral-400"
+            >footer? I barely know her.</span
+        >
+        <nav aria-label="footer nav" class="flex gap-6">
+            <FooterLink url="https://github.com/vikirnam" Icon={FaGithub} />
+            <FooterLink
+                url="https://linkedin.com/in/sudesh-subedi"
+                Icon={FaLinkedin}
+            />
+        </nav>
+    </div>
+</footer>

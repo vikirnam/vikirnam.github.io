@@ -1,0 +1,31 @@
+---
+import type { CollectionEntry } from "astro:content";
+type Writing = CollectionEntry<"writings">;
+
+interface Props {
+    post: Writing;
+}
+const { post } = Astro.props;
+const { title, date, excerpt, tags } = post.data;
+---
+
+<a
+    href={`/writings/${post.id}`}
+    class="border border-neutral-200 dark:border-neutral-800 rounded-sm p-6 justify-between
+         items-start gap-8 mb-1.5 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors block"
+>
+    <ol
+        class="flex gap-2 font-mono text-xs text-neutral-400 dark:text-neutral-300"
+    >
+        {tags.map((tag) => <li>{tag}</li>)}
+    </ol>
+    <h3 class="text-lg font-medium tracking-tight leading-snug">{title}</h3>
+    <p
+        class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed flex-1"
+    >
+        {excerpt}
+    </p>
+    <span class="font-mono text-xs text-neutral-400 dark:text-neutral-300"
+        >{date.toLocaleDateString()}</span
+    >
+</a>

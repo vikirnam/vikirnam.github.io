@@ -1,1 +1,12 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+.filter-btn {
+    @apply font-mono text-xs px-3 py-1.5 border border-neutral-200 rounded-sm text-neutral-400 cursor-pointer transition-colors hover:border-neutral-400 hover:text-neutral-600;
+}
+
+.filter-btn.active {
+    @apply border-purple-500 text-purple-500 bg-purple-500/5;
+}

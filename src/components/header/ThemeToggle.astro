@@ -1,0 +1,52 @@
+<button
+    id="theme-toggle"
+    class="font-mono text-xs text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200
+         transition-colors cursor-pointer"
+    aria-label="Toggle theme"
+>
+    <span id="theme-icon">system</span>
+</button>
+
+<script>
+    const btn = document.getElementById("theme-toggle");
+    const icon = document.getElementById("theme-icon");
+    const root = document.documentElement;
+
+    function getTheme() {
+        return localStorage.getItem("theme") ?? "system";
+    }
+
+    function applyTheme(theme: string) {
+        if (theme === "system") {
+            const system = window.matchMedia(
+                "(prefers-color-scheme: dark)",
+            ).matches;
+            root.classList.toggle("dark", system);
+        } else {
+            root.classList.toggle("dark", theme === "dark");
+        }
+        icon!.textContent = theme;
+    }
+
+    function cycleTheme() {
+        const current = getTheme();
+        const next =
+            current === "system"
+                ? "light"
+                : current === "light"
+                  ? "dark"
+                  : "system";
+        localStorage.setItem("theme", next);
+        applyTheme(next);
+    }
+
+    applyTheme(getTheme());
+    btn?.addEventListener("click", cycleTheme);
+
+    // keep in sync if system theme changes while on system mode
+    window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .addEventListener("change", () => {
+            if (getTheme() === "system") applyTheme("system");
+        });
+</script>

@@ -1,0 +1,39 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { FaArrowRight } from "react-icons/fa";
+import PostCard from "./PostCard.astro";
+import PostSmall from "./PostSmall.astro";
+type Writing = CollectionEntry<"writings">;
+
+interface Props {
+    featured: Writing[];
+    recent: Writing[];
+}
+const { featured, recent } = Astro.props;
+const featured_length = featured.length;
+const recent_length = recent.length;
+---
+
+<section>
+    <div class="flex justify-between items-baseline mb-5">
+        <span
+            class="font-mono text-xs uppercase tracking-widest text-neutral-600 dark:text-neutral-200"
+            >Writings</span
+        >
+        <a href="/writings" class="font-mono text-xs text-purple-700 flex gap-2"
+            >all writings <FaArrowRight />
+        </a>
+    </div>
+
+    <div
+        class={`grid grid-cols-${featured_length} gap-px bg-neutral-200 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-800`}
+    >
+        {featured.map((post) => <PostCard post={post} />)}
+    </div>
+
+    <div
+        class={`grid grid-cols-${recent_length} gap-px bg-neutral-200 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-800 border-t-0`}
+    >
+        {recent.map((post) => <PostSmall post={post} />)}
+    </div>
+</section>

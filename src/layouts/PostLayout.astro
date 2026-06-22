@@ -1,0 +1,14 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+
+const { title } = Astro.props;
+---
+
+<BaseLayout title={title}>
+    <div class="grid grid-cols-[1fr_200px] gap-14 items-start">
+        <slot name="article" />
+        <aside class="sticky top-6">
+            <slot name="sidebar" />
+        </aside>
+    </div>
+</BaseLayout>

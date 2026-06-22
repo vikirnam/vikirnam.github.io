@@ -1,9 +1,27 @@
 ---
-import "../styles/global.css";
+import Hero from "@components/home/Hero.astro";
+import ProjectStrip from "@components/home/ProjectStrip.astro";
+import BlogPreview from "@components/home/BlogPreview.astro";
+import BaseLayout from "@layouts/BaseLayout.astro";
+import { projects } from "../data/project";
+import { getCollection } from "astro:content";
+
+const selected_projects_id = ["overlayfs", "3o14"];
+
+const allPosts = await getCollection("writings", ({ data }) => !data.draft);
+allPosts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const featuredPosts = allPosts.filter((p) => p.data.shouldFeature).slice(0, 2);
+const recentPosts = allPosts
+    .slice(0, 3)
+    .filter((post) => !featuredPosts.map((fp) => fp.id).includes(post.id));
 ---
 
-<html>
-<body class="text-5xl bg-amber-800 px-1">
-<h1>Hello, World</h1>
-</body>
-</html>
+<BaseLayout pageTitle="Vikirna">
+    <Hero />
+    <ProjectStrip
+        projects={projects.filter((p) => selected_projects_id.includes(p.id))}
+    />
+
+    <BlogPreview featured={featuredPosts} recent={recentPosts} />
+</BaseLayout>

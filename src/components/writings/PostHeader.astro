@@ -1,0 +1,35 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { FaArrowLeft } from "react-icons/fa";
+
+type Writing = CollectionEntry<"writings">;
+
+interface Props {
+    post: Writing;
+}
+const { post } = Astro.props;
+const { title, tags, date } = post.data;
+---
+
+<div class="mb-10">
+    <a
+        href="/writings"
+        class="font-mono text-xs text-neutral-400 hover:text-purple-700 transition-colors mb-8 block"
+    >
+        <FaArrowLeft /> writings
+    </a>
+
+    <ol class="flex gap-2 font-mono text-xs text-neutral-400">
+        {tags.map((tag) => <li>{tag}</li>)}
+    </ol>
+
+    <h1 class="text-4xl font-medium tracking-tighter leading-tight mb-4">
+        {title}
+    </h1>
+
+    <div
+        class="font-mono text-xs text-neutral-400 pb-8 border-b border-neutral-200"
+    >
+        {date.toLocaleDateString()}
+    </div>
+</div>

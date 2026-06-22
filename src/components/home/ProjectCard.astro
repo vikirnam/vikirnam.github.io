@@ -1,0 +1,21 @@
+---
+import { type Project } from "../../data/project";
+
+interface Props {
+    project: Project;
+}
+
+const { project } = Astro.props;
+---
+
+<div class="bg-white dark:bg-neutral-950 p-5 flex flex-col gap-3">
+    <p class="text-sm font-medium tracking-tight">{project.name}</p>
+    <p
+        class="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed flex-1"
+    >
+        {project.description}
+    </p>
+    <p class="font-mono text-xs text-neutral-400 dark:text-neutral-300">
+        {project.stack}
+    </p>
+</div>

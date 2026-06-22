@@ -1,0 +1,63 @@
+---
+import type { MarkdownHeading } from "astro";
+
+interface Props {
+    headings: MarkdownHeading[];
+}
+const { headings } = Astro.props;
+const h2s = headings.filter((h) => h.depth === 2);
+---
+
+<div class="mb-8">
+    <span
+        class="font-mono text-xs uppercase tracking-widest text-neutral-400 dark:text-neutral-200 block pb-2 border-b border-neutral-200 dark:border-neutral-800 mb-3"
+    >
+        on this page
+    </span>
+
+    <ul class="space-y-0.5 list-none">
+        {
+            h2s.map((h) => (
+                <li>
+                    <a
+                        href={`#${h.slug}`}
+                        class="toc-link font-mono text-xs text-neutral-500  dark:text-neutral-400 block py-1 pl-2 border border-transparent hover:border-purple-700 hover:text-neutral-900 dark:hover:text-neutral-50 transition-all"
+                    >
+                        {h.text}
+                    </a>
+                </li>
+            ))
+        }
+    </ul>
+</div>
+
+<script>
+    const links = document.querySelectorAll(".toc-link");
+    const headings = document.querySelectorAll("article h2");
+
+    // TODO: make this work
+    const observer = new IntersectionObserver(
+        (entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    links.forEach((l) =>
+                        l.classList.remove(
+                            "border-purple-700",
+                            "text-neutral-900",
+                        ),
+                    );
+                    const active = document.querySelector(
+                        `.toc-link[href=#${entry.target.id}]`,
+                    );
+                    active?.classList.add(
+                        "border-purple-700",
+                        "text-neutral-900",
+                    );
+                }
+            });
+        },
+        { rootMargin: "0px 0px -80% 0px" },
+    );
+
+    headings.forEach((h) => observer.observe(h));
+</script>

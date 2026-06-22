@@ -1,0 +1,65 @@
+---
+import PostHeader from "@components/writings/PostHeader.astro";
+import RelatedPosts from "@components/writings/RelatedPosts.astro";
+import TableOfContents from "@components/writings/TableOfContents.astro";
+import PostLayout from "@layouts/PostLayout.astro";
+import { render } from "astro:content";
+import { getCollection } from "astro:content";
+
+export async function getStaticPaths() {
+    function commonTagScore(aTags: String[], bTags: String[]) {
+        const aSet = new Set(aTags);
+        const bSet = new Set(bTags);
+
+        return aSet.intersection(bSet).size / aSet.size;
+    }
+
+    const posts = await getCollection("writings", ({ data }) => !data.draft);
+    return posts.map((post) => {
+        const relatedPosts = posts
+            .filter((other) => other.id !== post.id)
+            .map((other) => {
+                const score = commonTagScore(post.data.tags, other.data.tags);
+
+                return { post: other, score };
+            })
+            .filter((r) => r.score > 0)
+            .sort((a, b) => b.score - a.score)
+            .map((p) => p.post);
+
+        return {
+            params: { slug: post.id },
+            props: { post, relatedPosts },
+        };
+    });
+}
+
+const { post, relatedPosts } = Astro.props;
+const { Content, headings } = await render(post);
+
+console.log(post.data);
+---
+
+<PostLayout title={post.data.title}>
+    <article slot="article">
+        <PostHeader post={post} />
+        <div
+            class="prose prose-neutral max-w-none
+            prose-headings:font-medium prose-headings:tracking-tight prose-headings:text-neutral-900 dark:prose-headings:text-neutral-50
+            prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
+            prose-p:text-neutral-600 dark:prose-p:text-neutral-300 prose-p:leading-relaxed
+            prose-a:text-coral-500 prose-a:no-underline hover:prose-a:underline
+            prose-code:font-mono prose-code:text-xs prose-code:bg-neutral-100 dark:prose-code:bg-neutral-800
+            prose-code:px-1.5 prose-code:rounded-sm prose-code:before:content-none
+            prose-code:after:content-none
+            prose-strong:text-neutral-900 dark:prose-strong:text-neutral-50 prose-strong:font-medium"
+        >
+            <Content />
+        </div>
+    </article>
+
+    <aside slot="sidebar">
+        <TableOfContents headings={headings} />
+        <RelatedPosts posts={relatedPosts} />
+    </aside>
+</PostLayout>
