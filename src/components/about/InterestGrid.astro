@@ -1,0 +1,30 @@
+---
+import { FiServer } from "react-icons/fi";
+import { FiPenTool } from "react-icons/fi";
+import { FiCpu } from "react-icons/fi";
+import { SiRust } from "react-icons/si";
+import { TbBinaryTree } from "react-icons/tb";
+
+const interests = [
+    { Icon: FiCpu, label: "OS Internals" },
+    { Icon: SiRust, label: "Rust" },
+    { Icon: TbBinaryTree, label: "Data Structures and Algorithms" },
+    { Icon: FiServer, label: "Distributed System" },
+    { Icon: FiPenTool, label: "Technical Writing" },
+];
+---
+
+<p class="font-mono text-[11px] tracking-widest uppercase text-zinc-400 mb-5">
+    current interests
+</p>
+
+<div class="grid grid-cols-[repeat(auto-fill,minmax(150px, 1fr))] gap-2.5">
+    {
+        interests.map(({ Icon, label }) => (
+            <div class="flex items-center gap-1.5 px-3 py-2 font-mono text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-sm">
+                <Icon className="text-purple-700 shrink-0" size={14} />
+                {label}
+            </div>
+        ))
+    }
+</div>

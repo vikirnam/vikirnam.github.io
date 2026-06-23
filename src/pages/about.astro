@@ -1,11 +1,59 @@
 ---
-import Header from "@components/header/Header.astro";
-import "../styles/global.css";
+import TerminalCard from "@components/about/TerminalCard.astro";
+import InterestGrid from "@components/about/InterestGrid.astro";
+import Timeline from "@components/about/Timeline.astro";
+import BaseLayout from "@layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+import LinkCards from "@components/about/LinkCards.astro";
+
+const selected_projects_id = ["overlayfs", "3o14"];
+
+const allPosts = await getCollection("writings", ({ data }) => !data.draft);
+allPosts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const recentPosts = allPosts.slice(0, 3);
 ---
 
-<html>
-    <body>
-        <Header />
-        <h1>About</h1>
-    </body>
-</html>
+<BaseLayout pageTitle="About Me">
+    <div
+        class="max-w-4xl mx-auto px-10 py-12 grid grid-cols-[320px_1fr] gap-16 items-start"
+    >
+        <aside class="sticky top-8">
+            <TerminalCard />
+            <LinkCards />
+        </aside>
+
+        <main>
+            <p class="eyebrow">about</p>
+            <h1 class="text-4xl font-medium tracking-tight leading-tight mb-7">
+                I build things close<br /> to metal.<br />
+            </h1>
+
+            <div class="prose-block">
+                <p>
+                    I'm a Computer Engineering graduate with a strong interest
+                    in <strong
+                        >low level systems, particularly operating system
+                        internals, algorithms and performance optimizations</strong
+                    >. I've build a <strong
+                        >decentralized and federated microblogging platform with
+                        latex support for scientific communication</strong
+                    > as part of my minor project during my computer engineering years.
+                    I have also build an <strong
+                        >overlay filesystem implementation for microkernel based
+                        operating system</strong
+                    > for the final year project.
+                </p>
+            </div>
+
+            <hr class="divider" />
+
+            <InterestGrid />
+            <!-- 
+            TODO: Add timeline
+            <hr class="divider" />
+
+            <Timeline /> -->
+        </main>
+    </div>
+</BaseLayout>
