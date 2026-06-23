@@ -1,10 +1,10 @@
 ---
-import type { MarkdownHeading } from "astro";
+import type { MarkdownHeading } from "astro/dist/types/public";
 
 interface Props {
     headings: MarkdownHeading[];
 }
-const { headings } = Astro.props;
+const { headings }: Props = Astro.props;
 const h2s = headings.filter((h) => h.depth === 2);
 ---
 
@@ -47,7 +47,7 @@ const h2s = headings.filter((h) => h.depth === 2);
                         ),
                     );
                     const active = document.querySelector(
-                        `.toc-link[href=#${entry.target.id}]`,
+                        `.toc-link[href="#${entry.target.id}"]`,
                     );
                     active?.classList.add(
                         "border-purple-700",
