@@ -1,0 +1,41 @@
+---
+import BaseLayout from "@layouts/BaseLayout.astro";
+import { projects } from "../data/project";
+import FeaturedProject from "@components/projects/FeaturedProject.astro";
+import ProjectRow from "@components/projects/ProjectRow.astro";
+
+const featured_project_id = "overlayfs";
+const featured = projects.find((p) => p.id === featured_project_id);
+
+const rest = projects.filter((p) => p.id != featured_project_id);
+---
+
+<BaseLayout pageTitle="writings">
+    <div
+        class="grid grid-cols-2 gap-12 items-end pb-14 border-b border-neutral-200 mb-14"
+    >
+        <h1 class="text-5xl font-medium tracking-tighter leading-none">
+            Projects<span class="text-purple-700">.</span>
+        </h1>
+    </div>
+
+    {
+        featured && (
+            <>
+                <p class="font-mono text-xs uppercase tracking-widest text-neutral-400 dark:text-neutral-300 mb-3">
+                    pinned project
+                </p>
+                <FeaturedProject project={featured} />
+            </>
+        )
+    }
+
+    <p
+        class="font-mono text-xs uppercase tracking-widest text-neutral-400 dark:text-neutral-300 mt-12 mb-4"
+    >
+        all projects
+    </p>
+    <div id="post-list" class="flex flex-col">
+        {rest.map((project) => <ProjectRow project={project} />)}
+    </div>
+</BaseLayout>
