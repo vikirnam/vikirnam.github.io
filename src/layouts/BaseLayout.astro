@@ -25,6 +25,12 @@ const { pageTitle } = Astro.props;
                 }
             })();
         </script>
+
+        <style>
+            * {
+                scrollbar-width: none;
+            }
+        </style>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{pageTitle}</title>
