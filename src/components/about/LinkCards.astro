@@ -1,8 +1,14 @@
 ---
+import { FaMastodon } from "react-icons/fa";
 import { FiGithub, FiLinkedin, FiMail, FiFileText } from "react-icons/fi";
 
 const links = [
     { icon: FiGithub, label: "github", href: "https://github.com/vikirnam" },
+    {
+        icon: FaMastodon,
+        label: "hachyderm",
+        href: "https://hachyderm.io/@faultypointer",
+    },
     {
         icon: FiLinkedin,
         label: "linkedin",
@@ -12,6 +18,10 @@ const links = [
     { icon: FiFileText, label: "résumé.pdf", href: "/resume/main.pdf" },
 ];
 ---
+
+<p class="font-mono text-[11px] tracking-widest uppercase text-zinc-400 mb-5">
+    links and socials
+</p>
 
 <div class="flex flex-col gap-1 mt-5">
     {
