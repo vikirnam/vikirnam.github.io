@@ -3,7 +3,7 @@ export interface Project {
     name: string,
     title?: string,
     description: string,
-    stack: string, // TODO: stack as a list of string
+    stack: string[], // TODO: stack as a list of string
     source: string,
     demo?: string,
 }
@@ -18,7 +18,7 @@ export const projects: Project[] = [
                     memory-safety guarantees to eliminate use-after-free and data-race bugs at compile time.
                     Operates entirely in user-space as a native RedoxOS scheme, requiring zero kernel modifications.
         `,
-        stack: 'rust',
+        stack: ['rust'],
         source: 'https://gitlab.com/carboxide/overlayfs',
     },
 
@@ -33,7 +33,7 @@ export const projects: Project[] = [
                     to host their own instances without losing connectivity. By leveraging decentralization
                     and federation, this project provides a privacy-conscious, accessible, and academically
                     enriching alternative to existing platforms.`,
-        stack: 'Typescript, React Native, Honojs, Postgresql',
+        stack: ['Typescript', 'React Native', 'Honojs', 'Postgresql'],
         source: 'https://github.com/3o14-com',
     },
 
@@ -44,7 +44,7 @@ export const projects: Project[] = [
         description: `A UCI compatible chess engine written in Zig with support for core UCI commands, move generation, board evaluation, 
                     and game state management. Focused on low-level systems programming, engine architecture, and search logic 
                     while exploring performance-oriented design in Zig.`,
-        stack: 'zig',
+        stack: ['zig'],
         source: 'https://github.com/faultypointer/tonica',
     },
 ];

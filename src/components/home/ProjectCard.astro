@@ -15,7 +15,9 @@ const { project } = Astro.props;
     >
         {project.description}
     </p>
-    <p class="font-mono text-xs text-neutral-400 dark:text-neutral-300">
-        {project.stack}
-    </p>
+    <ol
+        class="flex gap-2 font-mono text-xs text-neutral-400 dark:text-neutral-300"
+    >
+        {project.stack.map((tech) => <li>{tech}</li>)}
+    </ol>
 </div>
