@@ -1,4 +1,5 @@
 ---
+// src/components/writings/PinnedPost.astro
 import type { CollectionEntry } from "astro:content";
 type Writing = CollectionEntry<"writings">;
 
@@ -11,21 +12,30 @@ const { title, date, excerpt, tags } = post.data;
 
 <a
     href={`/writings/${post.id}`}
-    class="border border-neutral-200 dark:border-neutral-800 rounded-sm p-6 justify-between
-         items-start gap-8 mb-1.5 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors block"
+    class="border border-purple-200 dark:border-purple-900 bg-purple-50/30 dark:bg-purple-950/10 rounded-md p-8 
+           flex-col gap-4 mb-8 hover:bg-purple-50/50 dark:hover:bg-purple-950/20 transition-all shadow-sm block group"
 >
-    <ol
-        class="flex gap-2 font-mono text-xs text-neutral-400 dark:text-neutral-300"
-    >
-        {tags.map((tag) => <li>{tag}</li>)}
-    </ol>
-    <h3 class="text-lg font-medium tracking-tight leading-snug">{title}</h3>
-    <p
-        class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed flex-1"
-    >
-        {excerpt}
-    </p>
-    <span class="font-mono text-xs text-neutral-400 dark:text-neutral-300"
-        >{date.toLocaleDateString()}</span
-    >
+    <div class="flex items-center justify-between gap-4">
+        <ol class="flex flex-wrap gap-2 font-mono text-xs text-purple-700 dark:text-purple-400">
+            {tags.map((tag) => (
+                <li class="border border-purple-300 dark:border-purple-800 bg-purple-100/50 dark:bg-purple-900/30 px-1.5 py-0.5 rounded-sm">
+                    {tag}
+                </li>
+            ))}
+        </ol>
+        
+        <span class="font-mono text-xs text-neutral-400 dark:text-neutral-500">
+            {date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+        </span>
+    </div>
+
+    <h3 class="text-2xl font-semibold tracking-tight leading-snug text-neutral-900 dark:text-neutral-50 group-hover:text-purple-700 dark:group-hover:text-purple-400 transition-colors">
+        {title}
+    </h3>
+
+    {excerpt && (
+        <p class="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed max-w-2xl">
+            {excerpt}
+        </p>
+    )}
 </a>
