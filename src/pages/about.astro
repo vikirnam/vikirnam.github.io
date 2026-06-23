@@ -1,26 +1,24 @@
 ---
 import TerminalCard from "@components/about/TerminalCard.astro";
 import InterestGrid from "@components/about/InterestGrid.astro";
-import Timeline from "@components/about/Timeline.astro";
+// import Timeline from "@components/about/Timeline.astro";
 import BaseLayout from "@layouts/BaseLayout.astro";
-import { getCollection } from "astro:content";
 import LinkCards from "@components/about/LinkCards.astro";
-
-const selected_projects_id = ["overlayfs", "3o14"];
-
-const allPosts = await getCollection("writings", ({ data }) => !data.draft);
-allPosts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
-
-const recentPosts = allPosts.slice(0, 3);
 ---
 
 <BaseLayout pageTitle="About Me">
     <div
         class="max-w-4xl mx-auto px-10 py-12 grid grid-cols-[320px_1fr] gap-16 items-start"
     >
-        <aside class="sticky top-8">
+        <aside class="sticky top-8 overflow-y-hidden">
             <TerminalCard />
+
+            <hr class="divider" />
+
             <LinkCards />
+            <hr class="divider" />
+
+            <InterestGrid />
         </aside>
 
         <main>
@@ -44,13 +42,22 @@ const recentPosts = allPosts.slice(0, 3);
                         operating system</strong
                     > for the final year project.
                 </p>
+
+                <p>
+                    <!-- TODO: links to projects mentioned 
+                    (writeups if I ever write one otherwise link to repo)
+                    -->
+                    Although my interest mainly lie somewhat close to hardware, I
+                    do find myself enjoying the comforts of abstractions available
+                    when building web apps or programming <strong
+                        >a chess engine</strong
+                    > or doing silly little projects like <strong
+                        >a CLI app for learning japanese</strong
+                    >.
+                </p>
             </div>
 
-            <hr class="divider" />
-
-            <InterestGrid />
-            <!-- 
-            TODO: Add timeline
+            <!-- TODO: Add timeline
             <hr class="divider" />
 
             <Timeline /> -->
