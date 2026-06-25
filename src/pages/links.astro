@@ -1,0 +1,21 @@
+---
+import BaseLayout from "@layouts/BaseLayout.astro";
+import { links } from "../data/links";
+import LinkItem from "@components/extra/LinkItem.astro";
+---
+
+<BaseLayout>
+    <div class="pb-14 border-b border-neutral-200 mb-14">
+        <h1 class="text-5xl font-medium tracking-tighter leading-none">
+            Links<span class="text-purple-700">.</span>
+        </h1>
+        <p
+            class="text-xs text-neutral-50 dark:text-neutral-950 leading-relaxed"
+        >
+            One of the hidden pages on this site.
+        </p>
+    </div>
+    <ul class="list-disc">
+        {links.map((link) => <LinkItem link={link} />)}
+    </ul>
+</BaseLayout>
