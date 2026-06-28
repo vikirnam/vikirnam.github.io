@@ -1,0 +1,76 @@
+---
+import { Image } from "astro:assets";
+import { typeConfig, type TimelineItem } from "../../data/timeline";
+
+interface Props {
+    item: TimelineItem;
+    index: number;
+}
+
+const { item, index } = Astro.props;
+const cfg = typeConfig[item.type];
+const dateStr = item.date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+});
+---
+
+<article
+    class="event-card absolute inset-0 flex flex-col justify-center px-12 py-10"
+    data-type={item.type}
+    data-date={item.date.toISOString()}
+    id={`event-${index}`}
+    aria-hidden="true"
+>
+    <!-- Type + date -->
+    <div class="flex items-center gap-3 mb-5">
+        <span
+            class="font-mono text-[10px] uppercase tracking-widest px-2 py-0.5 rounded"
+            style={`background: ${cfg.color}22; color: ${cfg.color}`}
+        >
+            {cfg.label}
+        </span>
+        <span class="font-mono text-xs text-neutral-400 tabular-nums">
+            {dateStr}
+        </span>
+    </div>
+
+    <!-- Body -->
+    <div class="border-l-2 pl-6" style={`border-color: ${cfg.color}`}>
+        <h2 class="text-4xl font-medium tracking-tight leading-snug mb-6">
+            {item.title}
+        </h2>
+
+        <div class={`grid gap-8 ${item.images && item.images.length > 0 ? "md:grid-cols-2" : "grid-cols-1 max-w-xl"}`}>
+            <p class="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                {item.description}
+            </p>
+
+            {item.images && item.images.length > 0 && (
+                <div class="image-slideshow relative aspect-video rounded overflow-hidden bg-neutral-100 dark:bg-neutral-900">
+                    {item.images.map((src, slideIdx) => (
+                        <Image
+                            src={src}
+                            alt=""
+                            width={800}
+                            height={450}
+                            class={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${slideIdx === 0 ? "opacity-100" : "opacity-0"}`}
+                            data-slide-index={slideIdx}
+                        />
+                    ))}
+                    {item.images.length > 1 && (
+                        <div class="absolute bottom-2 right-2 flex gap-1">
+                            {item.images.map((_, dotIdx) => (
+                                <button
+                                    class="slide-dot w-1.5 h-1.5 rounded-full bg-white/50 hover:bg-white transition-colors"
+                                    data-slide={dotIdx}
+                                    aria-label={`Go to image ${dotIdx + 1}`}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    </div>
+</article>

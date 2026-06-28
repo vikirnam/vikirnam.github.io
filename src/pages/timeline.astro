@@ -1,0 +1,338 @@
+---
+import BaseLayout from "@layouts/BaseLayout.astro";
+import TimelineCard from "@components/timeline/TimelineCard.astro";
+import TimelineRuler from "@components/timeline/TimelineRuler.astro";
+import TimelineFilters from "@components/timeline/TimelineFilters.astro";
+import TimelineNav from "@components/timeline/TimelineNav.astro";
+import { timelineData } from "../data/timeline";
+
+const sorted = [...timelineData].sort(
+    (a, b) => b.date.getTime() - a.date.getTime()
+);
+---
+
+<BaseLayout>
+    <div class="-mx-6 -mb-24" id="timeline-root">
+
+        <!-- Page header -->
+        <div class="px-6 max-w-4xl mx-auto pb-10 border-b border-neutral-200 dark:border-neutral-800">
+            <h1 class="text-5xl font-medium tracking-tighter leading-none">
+                Timeline<span class="text-[#D85A30]">.</span>
+            </h1>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed mt-1">
+                My life as a selected set of events.
+            </p>
+        </div>
+
+        <!-- 3-col stage -->
+        <div class="flex w-full" style="height: calc(100vh - var(--header-h, 120px) - var(--footer-h, 64px) - 89px)">
+
+            <!-- LEFT: Ruler -->
+            <div class="w-24 shrink-0 flex items-center justify-center border-r border-neutral-200 dark:border-neutral-800">
+                <TimelineRuler />
+            </div>
+
+            <!-- CENTER: Cards + nav -->
+            <div class="flex-1 flex flex-col min-w-0">
+                <div class="relative flex-1 overflow-hidden" id="card-viewport">
+                    {sorted.map((item, i) => (
+                        <TimelineCard item={item} index={i} />
+                    ))}
+                </div>
+                <div class="shrink-0 border-t border-neutral-200 dark:border-neutral-800 px-12 py-4">
+                    <TimelineNav />
+                </div>
+            </div>
+
+            <!-- RIGHT: Filters -->
+            <div class="w-40 shrink-0 border-l border-neutral-200 dark:border-neutral-800 px-4 py-6 overflow-y-auto">
+                <TimelineFilters />
+            </div>
+        </div>
+    </div>
+</BaseLayout>
+
+<style is:global>
+    .event-card {
+        transform: translateX(100%);
+        opacity: 0;
+        will-change: transform, opacity;
+    }
+    .event-card.is-active {
+        transform: translateX(0);
+        opacity: 1;
+        transition: transform 350ms cubic-bezier(0.4, 0, 0.2, 1),
+                    opacity 350ms ease;
+    }
+    .event-card.slide-out-left {
+        transform: translateX(-100%);
+        opacity: 0;
+        transition: transform 350ms cubic-bezier(0.4, 0, 0.2, 1),
+                    opacity 350ms ease;
+    }
+    .event-card.slide-out-right {
+        transform: translateX(100%);
+        opacity: 0;
+        transition: transform 350ms cubic-bezier(0.4, 0, 0.2, 1),
+                    opacity 350ms ease;
+    }
+    .event-card.parked-right {
+        transform: translateX(100%);
+        opacity: 0;
+        transition: none;
+    }
+    .event-card.parked-left {
+        transform: translateX(-100%);
+        opacity: 0;
+        transition: none;
+    }
+    .filter-btn.active-filter {
+        background: var(--type-color, #D85A30);
+        color: white;
+        border-color: transparent;
+    }
+    [data-filter="all"].active-filter {
+        background: #D85A30;
+        color: white;
+        border-color: transparent;
+    }
+</style>
+
+<script>
+    // ── Constants ─────────────────────────────────────────────────
+    const TICK_MAX_W = 48;
+    const TICK_MIN_W = 8;
+    const TICK_H     = 3;
+    const SIGMA      = 3;
+
+    // ── State ─────────────────────────────────────────────────────
+    let activeFilter = "all";
+    let currentIdx   = 0;
+    let isAnimating  = false;
+    let tickEls:     HTMLElement[] = [];
+    let yearLabel:   HTMLElement | null = null;
+
+    // ── Elements ──────────────────────────────────────────────────
+    const rulerInner = document.getElementById("ruler-inner");
+    const btnPrev    = document.getElementById("btn-prev") as HTMLButtonElement | null;
+    const btnNext    = document.getElementById("btn-next") as HTMLButtonElement | null;
+    const counter    = document.getElementById("nav-counter");
+    const filterBtns = document.querySelectorAll<HTMLButtonElement>(".filter-btn");
+    const allCards   = [...document.querySelectorAll<HTMLElement>(".event-card")];
+
+    // ── Helpers ───────────────────────────────────────────────────
+    const visibleCards = (): HTMLElement[] =>
+        allCards.filter(el =>
+            activeFilter === "all" || el.dataset["type"] === activeFilter
+        );
+
+    const parkAll = (): void => {
+        allCards.forEach(c => {
+            c.classList.remove("is-active", "slide-out-left", "slide-out-right", "parked-left");
+            c.classList.add("parked-right");
+            c.setAttribute("aria-hidden", "true");
+        });
+    };
+
+    // ── Ruler ─────────────────────────────────────────────────────
+    const bellWidth = (distance: number): number => {
+        const norm = Math.exp(-(distance * distance) / (2 * SIGMA * SIGMA));
+        return TICK_MIN_W + (TICK_MAX_W - TICK_MIN_W) * norm;
+    };
+
+    const updateTicks = (activeIdx: number): void => {
+        tickEls.forEach((tick, i) => {
+            const dist    = Math.abs(i - activeIdx);
+            const w       = bellWidth(dist);
+            const opacity = 0.25 + 0.75 * Math.exp(-(dist * dist) / (2 * SIGMA * SIGMA));
+            tick.style.width   = `${w}px`;
+            tick.style.opacity = opacity.toFixed(2);
+        });
+    };
+
+    const syncRulerToCard = (idx: number): void => {
+        updateTicks(idx);
+        const card = visibleCards()[idx];
+        if (card !== undefined && yearLabel !== null) {
+            const raw = card.dataset["date"] ?? "";
+            if (raw !== "") {
+                yearLabel.textContent = String(new Date(raw).getFullYear());
+            }
+        }
+    };
+
+    const buildRuler = (count: number): void => {
+        if (rulerInner === null) return;
+
+        rulerInner.innerHTML = `
+            <div style="display:flex;flex-direction:column;align-items:center;gap:16px;width:100%;height:100%;padding:24px 0;">
+                <div
+                    id="ruler-year-label"
+                    style="
+                        font-family:ui-monospace,monospace;
+                        font-size:10px;
+                        color:#D85A30;
+                        white-space:nowrap;
+                        user-select:none;
+                        pointer-events:none;
+                        letter-spacing:0.05em;
+                        flex-shrink:0;
+                    "
+                ></div>
+                <div
+                    id="ruler-ticks"
+                    style="
+                        display:flex;
+                        flex-direction:column;
+                        align-items:center;
+                        justify-content:center;
+                        gap:8px;
+                        width:100%;
+                        flex-grow:1;
+                        cursor:pointer;
+                    "
+                >
+                    ${Array.from({ length: count }, (_, i) => `
+                        <div
+                            class="ruler-tick"
+                            data-tick-index="${i}"
+                            style="
+                                height:${TICK_H}px;
+                                width:${TICK_MIN_W}px;
+                                background:#D85A30;
+                                border-radius:2px;
+                                opacity:0.3;
+                                transition:width 200ms ease, opacity 200ms ease;
+                                cursor:pointer;
+                                flex-shrink:0;
+                            "
+                        ></div>
+                    `).join("")}
+                </div>
+            </div>
+        `;
+
+        yearLabel = document.getElementById("ruler-year-label");
+        tickEls   = [...rulerInner.querySelectorAll<HTMLElement>(".ruler-tick")];
+
+        rulerInner.querySelector("#ruler-ticks")?.addEventListener("click", (e: Event) => {
+            const target = (e.target as HTMLElement).closest<HTMLElement>(".ruler-tick");
+            if (target === null) return;
+            const idx = parseInt(target.dataset["tickIndex"] ?? "0", 10);
+            const dir: "left" | "right" = idx >= currentIdx ? "right" : "left";
+            showCard(idx, dir);
+        });
+    };
+
+    const initRuler = (): void => {
+        buildRuler(visibleCards().length);
+        syncRulerToCard(0);
+    };
+
+    // ── Show card ─────────────────────────────────────────────────
+    const showCard = (nextIdx: number, direction: "left" | "right" = "right"): void => {
+        if (isAnimating) return;
+
+        const visible = visibleCards();
+        if (visible.length === 0) return;
+
+        const clampedNext = Math.min(Math.max(0, nextIdx), visible.length - 1);
+        if (clampedNext === currentIdx && allCards.some(c => c.classList.contains("is-active"))) return;
+
+        isAnimating = true;
+
+        const current = visible[currentIdx] ?? null;
+        const next    = visible[clampedNext];
+        if (next === undefined) { isAnimating = false; return; }
+
+        if (current !== null && current !== next) {
+            current.classList.remove("is-active");
+            current.classList.add(direction === "right" ? "slide-out-left" : "slide-out-right");
+        }
+
+        next.classList.remove("parked-right", "parked-left", "slide-out-left", "slide-out-right", "is-active");
+        next.classList.add(direction === "right" ? "parked-right" : "parked-left");
+        next.setAttribute("aria-hidden", "false");
+
+        void next.offsetWidth;
+
+        next.classList.remove("parked-right", "parked-left");
+        next.classList.add("is-active");
+
+        currentIdx = clampedNext;
+
+        const total = visible.length;
+        if (counter !== null) counter.textContent = `${currentIdx + 1} / ${total}`;
+        if (btnPrev !== null) btnPrev.disabled = currentIdx === 0;
+        if (btnNext !== null) btnNext.disabled = currentIdx === total - 1;
+
+        syncRulerToCard(currentIdx);
+
+        setTimeout(() => { isAnimating = false; }, 380);
+    };
+
+    // ── Navigation ────────────────────────────────────────────────
+    btnPrev?.addEventListener("click", () => showCard(currentIdx - 1, "left"));
+    btnNext?.addEventListener("click", () => showCard(currentIdx + 1, "right"));
+
+    document.addEventListener("keydown", (e: KeyboardEvent) => {
+        if (e.key === "ArrowLeft"  || e.key === "ArrowUp")   { e.preventDefault(); showCard(currentIdx - 1, "left");  }
+        if (e.key === "ArrowRight" || e.key === "ArrowDown")  { e.preventDefault(); showCard(currentIdx + 1, "right"); }
+    });
+
+    let wheelCooldown = false;
+    window.addEventListener("wheel", (e: WheelEvent) => {
+        if (wheelCooldown) return;
+        wheelCooldown = true;
+        if (e.deltaY > 0) showCard(currentIdx + 1, "right");
+        else               showCard(currentIdx - 1, "left");
+        setTimeout(() => { wheelCooldown = false; }, 500);
+    }, { passive: true });
+
+    let touchStartX = 0;
+    window.addEventListener("touchstart", (e: TouchEvent) => {
+        touchStartX = e.touches[0]?.clientX ?? 0;
+    }, { passive: true });
+    window.addEventListener("touchend", (e: TouchEvent) => {
+        const dx = (e.changedTouches[0]?.clientX ?? 0) - touchStartX;
+        if (Math.abs(dx) < 40) return;
+        if (dx < 0) showCard(currentIdx + 1, "right");
+        else         showCard(currentIdx - 1, "left");
+    }, { passive: true });
+
+    // ── Filters ───────────────────────────────────────────────────
+    filterBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+            activeFilter = btn.dataset["filter"] ?? "all";
+            filterBtns.forEach(b => b.classList.remove("active-filter"));
+            document.querySelectorAll<HTMLButtonElement>(`[data-filter="${activeFilter}"]`)
+                .forEach(b => b.classList.add("active-filter"));
+            parkAll();
+            currentIdx = 0;
+            buildRuler(visibleCards().length);
+            showCard(0, "right");
+        });
+    });
+
+    // ── Image slideshows ──────────────────────────────────────────
+    allCards.forEach(card => {
+        const imgs = card.querySelectorAll<HTMLImageElement>("img");
+        const dots = card.querySelectorAll<HTMLButtonElement>(".slide-dot");
+        if (imgs.length <= 1) return;
+        let cur = 0;
+        const go = (idx: number): void => {
+            imgs[cur]?.classList.replace("opacity-100", "opacity-0");
+            dots[cur]?.classList.replace("bg-white", "bg-white/50");
+            cur = idx;
+            imgs[cur]?.classList.replace("opacity-0", "opacity-100");
+            dots[cur]?.classList.replace("bg-white/50", "bg-white");
+        };
+        dots.forEach((dot, i) => dot.addEventListener("click", () => go(i)));
+        setInterval(() => go((cur + 1) % imgs.length), 4000);
+    });
+
+    // ── Init ──────────────────────────────────────────────────────
+    parkAll();
+    initRuler();
+    showCard(0, "right");
+</script>

@@ -1,0 +1,31 @@
+---
+import { typeConfig } from "../../data/timeline";
+
+---
+
+<aside id="timeline-filters" class="flex flex-col gap-2 pt-1">
+    <p class="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-1">
+        Filter
+    </p>
+
+    <button
+        data-filter="all"
+        class="filter-btn active-filter block w-full text-left font-mono text-xs px-3 py-1.5 rounded border border-neutral-200 dark:border-neutral-800 transition-colors"
+    >
+        All
+    </button>
+
+    {Object.entries(typeConfig).map(([type, { label, color }]) => (
+        <button
+            data-filter={type}
+            class="filter-btn block w-full text-left font-mono text-xs px-3 py-1.5 rounded border border-neutral-200 dark:border-neutral-800 transition-colors"
+            style={`--type-color: ${color}`}
+        >
+            <span
+                class="inline-block w-1.5 h-1.5 rounded-full mr-2 align-middle"
+                style={`background: ${color}`}
+            />
+            {label}
+        </button>
+    ))}
+</aside>
