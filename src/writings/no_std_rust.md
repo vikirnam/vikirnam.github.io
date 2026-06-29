@@ -59,7 +59,136 @@ It's an attribute that tells rust to not link against the standard library.
 You might be wondering why would we not want to link against the standard library
 and miss out on all these awesome features.
 
+I said before that the standard library provided a nice abstraction on top of the features the operating system provides. Looking at it another way,
+the abstractions the standard library provides depends on operating system to function. Not just the abstractions, but collections like `Vec` uses
+allocator provided by the operating system.
 
+So, when we write code that can't utilize operating system functionalities because either there is no operating system support or the support from operating
+system is not what we want, then we can't link with standard library. This is the case when we are writing our own operating system or hypervisor or when we
+are writing code that directly run on hardware like embedded systems.
+
+Let's do it. Let's write a program that uses the `no_std` attribute and see what we can come up with.
+
+## How?
+We are going to see what it takes to write a rust program without using a standard library. We do need to decide what our program will be. We don't want anything fancy
+so lets just go for a simple "Hello, World" program.
+
+First of all, let's create a binary using cargo
+
+```bash
+cargo new hello_no_std
+```
+
+Let's also run it with `cargo run` to make sure everything is as expected.
+
+
+cargo run printed hello world. it works
+
+add no_std attribute
+
+we get three error when we try to compile again
+
+```bash
+error: cannot find macro `println` in this scope
+ --> src/main.rs:4:5
+  |
+4 |     println!("Hello, world!");
+  |     ^^^^^^^
+
+error: `#[panic_handler]` function required, but not found
+
+error: unwinding panics are not supported without std
+  |
+  = help: using nightly cargo, use -Zbuild-std with panic="abort" to avoid unwinding
+  = note: since the core library is usually precompiled with panic="unwind", rebuilding your crate with panic="abort" may not be enough to fix the problem
+```
+
+remove the print line and lets try a program that does nothing
+
+still the last two errors
+
+```bash
+error: `#[panic_handler]` function required, but not found
+
+error: unwinding panics are not supported without std
+...
+```
+
+what is panic_handler? or better yet, what is panic?
+
+https://doc.rust-lang.org/reference/panic.html#panic
+
+> The panic_handler attribute can be applied to a function to define the behavior of panics.
+
+hmm
+
+lets do it then
+
+```bash
+error[E0308]: `#[panic_handler]` function has wrong type
+ --> src/main.rs:8:1
+  |
+8 | fn handle_panic() {}
+  | ^^^^^^^^^^^^^^^^^ incorrect number of function parameters
+  |
+  = note: expected signature `for<'a, 'b> fn(&'a PanicInfo<'b>) -> !`
+             found signature `fn() -> ()`
+```
+
+something like that was in the reference too i think
+
+> The panic_handler attribute can only be applied to a function with signature `fn(&PanicInfo) -> !`.
+
+PanicInfo?
+https://doc.rust-lang.org/core/panic/struct.PanicInfo.html
+
+more on reference
+> The panic strategy can be chosen in rustc with the -C panic CLI flag.
+
+```toml
+[profile.dev]
+panic="abort"
+
+[profile.release]
+panic="abort"
+```
+
+new error. lets goo
+
+```bash
+error: using `fn main` requires the standard library
+  |
+  = help: use `#![no_main]` to bypass the Rust generated entrypoint and declare a platform specific entrypoint yourself, usually with `#[no_mangle]`
+```
+
+do what the compiler says
+
+```bash
+error: linking with `cc` failed: exit status: 1
+
+= note: rust-lld: error: undefined symbol: main
+          >>> referenced by /nix/store/8kvxvr3pmsypxiypq4g8zy13glnfr7nx-glibc-2.42-67/lib/Scrt1.o:(_start)
+
+          rust-lld: error: undefined symbol: __libc_start_main
+          >>> referenced by /nix/store/8kvxvr3pmsypxiypq4g8zy13glnfr7nx-glibc-2.42-67/lib/Scrt1.o:(_start)
+          collect2: error: ld returned 1 exit status
+```
+
+cargo book
+
+> On Unix-like targets that use cc as the linker driver, use -Clink-arg=-Wl,$ARG to pass an argument to the actual linker.
+
+https://doc.rust-lang.org/rustc/codegen-options/index.html#link-arg
+
+more on linker script
+https://home.cs.colorado.edu/~main/cs1300/doc/gnu/ld_3.html
+```toml
+[build]
+rustflags = ["-C", "link-args=-Wl,-T,custom.ld"]
+```
+
+
+## The no_std ecosystem
 
 ## References
 - [OSDev Wiki: System Calls](https://wiki.osdev.org/System_Calls)
