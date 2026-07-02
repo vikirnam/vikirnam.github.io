@@ -1,0 +1,25 @@
+---
+// TODO: make this better using reference
+// https://blog.markdowntools.com/posts/markdown-admonitions-callouts-complete-guide
+
+interface Props {
+    type: 'warn' | 'info',
+}
+
+const style_by_type = {
+    'warn': 'bg-orange-500',
+    'info': 'bg-blue-500',
+}
+
+const title_by_type = {
+    'warn': 'warning',
+    'info': 'info',
+}
+
+const { type } = Astro.props;
+---
+
+<div class={`block ${style_by_type[type]}`}>
+    <h1 class="uppercase text-2xl ">{title_by_type[type]}</h1>
+    <slot />
+</div>
