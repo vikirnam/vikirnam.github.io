@@ -43,6 +43,7 @@
               astro-language-server
               vscode-css-languageserver
               tailwindcss-language-server
+              mdx-language-server
               prettier
             ];
           };

@@ -13,6 +13,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@astrojs/mdx": "^7.0.1",
     "@astrojs/react": "^6.0.0",
     "@astrojs/ts-plugin": "^1.10.9",
     "@tailwindcss/vite": "^4.3.1",

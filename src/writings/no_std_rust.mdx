@@ -1,0 +1,294 @@
+---
+title: "All About no_std Rust"
+date: 2026-06-28
+shouldFeature: true
+excerpt: "The rust standard library provide various important functionalities. The no_std attribute is a way to opt out of all these functionalities. In this blog, I explain why we would want to do that and more importantly how."
+draft: true
+tags: ["rust", "osdev"]
+---
+
+## Standard Library and Operating System
+Rust defines its standard library as
+
+> The Rust Standard Library is the foundation of portable Rust software, a set of
+> minimal and battle-tested shared abstractions for the broader Rust ecosystem. It
+> offers core types, like `Vec<T>` and `Option<T>`, library-defined operations on
+> language primitives, standard macros, I/O and multithreading, among many other
+> things.
+
+This is true for most implementations of other programming languages as well. The
+standard library of each languages and their implementation are a collection of code
+providing functionalities like
+- Implementation of common data structures and algorithms
+- Interaction with external system
+- Interaction with the operating system
+
+Beside these, standard library of some languages provide extra functionalities for
+other common operations like
+- Parsing JSON, XML and other common data formats
+- Building a web server
+
+The important ones for today are interaction with operating system and interaction with external system (which is generally done through OS as well).
+
+Operating systems have many important responsibilities one of which is providing
+client programs with various services that are very difficult or impossible for
+client programs to implement themselves. Some of these services include interacting
+with hardware, running new programs, communicating with other programs among other things. The os provides these services through system calls. The most common way
+OSes implement syscalls is through a software interrupts. The client programs can
+invoke that system call using special instruction.
+
+For example, on x86_64 system, `SYSCALL` is used to invoke a syscall.[^1] This instruction has no operands and the required arguments, along with the syscall number (which identifies which syscall to invoke)
+is moved to appropriate registers before issuing the `SYSCALL` instruction.
+
+The standard libraries provide nice abstractions over these system calls making it
+easier to interface with the OS.
+
+Here are few of the modules Rust's std exposes:
+- `std::alloc`: Memory Allocation API
+- `std::fs`: Filesystem manipulation operations
+- `std::net`: Networking primitives for TCP/UDP communication
+- `std::sync`: Useful synchronization primitives
+
+and many, many more.
+
+## What and Why?
+So, what exactly is no_std?
+It's an attribute that tells rust to not link against the standard library.
+![Barry Series: What gif](../images/barry_what.gif)
+
+You might be wondering why would we not want to link against the standard library
+and miss out on all these awesome features.
+
+I said before that the standard library provided a nice abstraction on top of the features the operating system provides. Looking at it another way,
+the abstractions the standard library provides depends on operating system to function. Not just the abstractions, but collections like `Vec` uses
+allocator provided by the operating system.
+
+So, when we write code that can't utilize operating system functionalities because either there is no operating system support or the support from operating
+system is not what we want, then we can't link with standard library. This is the case when we are writing our own operating system or hypervisor or when we
+are writing code that directly run on hardware like embedded systems.
+
+Let's do it. Let's write a program that uses the `no_std` attribute and see what we can come up with.
+
+## How?
+We are going to see what it takes to write a rust program without using a standard library. We do need to decide what our program will be. We don't want anything fancy
+so lets just go for a program that runs forever without doing anything.
+
+First of all, let's create a binary and run it to make sure everything is working.
+
+```bash
+cargo new hello_no_std
+cd hello_new_std
+cargo run
+```
+
+This should print "Hello, World".
+
+Now to tell rust to not link against the standard library, add `#![no_std]` at the top of `main.rs`.
+
+If we go ahead and compile it now, we get the following three errors:
+
+```bash
+error: cannot find macro `println` in this scope
+ --> src/main.rs:4:5
+  |
+4 |     println!("Hello, world!");
+  |     ^^^^^^^
+
+error: `#[panic_handler]` function required, but not found
+
+error: unwinding panics are not supported without std
+  |
+  = help: using nightly cargo, use -Zbuild-std with panic="abort" to avoid unwinding
+  = note: since the core library is usually precompiled with panic="unwind", rebuilding your crate with panic="abort" may not be enough to fix the problem
+```
+
+The `println` macro is defined in the standard library so it can't find it now that we are not linking against it.
+But that is not a problem for us, we are just making a program that does nothing but loop forever, so we can
+just remove that line and replace with an infinite loop: `loop {}`.
+
+That leaves us with two error. Both are about panics.
+
+So, what exactly is a panic?
+Panics are a mechanism in rust to handle unrecoverable errors, such as accessing an array out of bounds.
+The default strategy for handling panics is to unwind the stack where Rust walks back through the stack and cleans
+up the data. There is another option which immediately aborts the program without any cleaning up.
+
+There is another aspect to panic handling in rust and that is the `panic_handler` attribute.
+This attribute is applied to a function to define the behavior of the panics.
+
+The standard library provides panic handler for both strategy: `unwind` and `abort`.[^2]
+The default handler (when available) is the `unwind` handler.
+
+So by not linking with standard library, we also need to define our own `panic_handler` function.That is what the second error is taking about.
+
+Let's go ahead and do that. According to the [reference](https://doc.rust-lang.org/reference/panic.html#the-panic_handler-attribute), the `panic_handler` attribute can only be applied to a
+function with signature `fn(&PanicInfo) -> !`.
+
+The `PanicInfo` is a structure that provides the function with information about the panic like
+the message associated with the panic (the message given to `panic!` macro), the location information where the panic originated.
+
+So, what are we going to do in our panic function and what is that return type?
+
+The `!` is the `never` type which indicates that this `panic` function should never return.
+For now we are just going to do nothing and loop forever just like our main function.
+
+```rust
+#[panic_handler]
+fn panic(_info: &PanicInfo) -> ! {
+  loop {}
+}
+```
+
+If we build our program now, we still get the last error about unwinding panics not being supported without std.
+Remember that the default strategy for rust is to unwind. The unwind strategy depends on the
+functionalities provided by the standard library and the runtime. So we need to tell rust that
+we are using the abort strategy.
+
+We can specify it in our `Cargo.toml`.
+```toml
+[profile.dev]
+panic="abort"
+
+[profile.release]
+panic="abort"
+```
+
+Now, all three errors are accounted for. So we can build and run to see everything wor-
+
+```bash
+error: using `fn main` requires the standard library
+  |
+  = help: use `#![no_main]` to bypass the Rust generated entrypoint and declare a platform specific entrypoint yourself, usually with `#[no_mangle]`
+```
+
+![Mr. Bean Confused Face](../images/mrbean_confused_face.jpg)
+
+What do you mean using `fn main` requires standard library?
+
+In a typical rust binary, the `fn main` is the entry point to our program. But it is not the first piece of code that gets run. Far from it. I'm not yet qualified to explain the intricate details of everything that happens before the program actually gets to main. For that you can
+watch [this video](https://www.youtube.com/watch?v=q8irLfXwaFM)
+
+The gist of it is that c runtime sets up some stuff like stack initialization and things related to command line arguments then calls rust runtime. The rust runtime in turn sets up some
+additional stuff and only then is our main function is called.
+
+Thus, without standard library there are no c and rust runtime to call our main function.
+
+So, what do we do?
+
+The error message is there to help.
+It says we should use `#![no_main]` and supply our own entry point, one that doesn't depend on
+rust and c runtime.
+
+It also says we should use `#![no_mangle]`. What is that?
+
+The compiler does something called name mangling which is to encode a unique name for symbols
+that are used during code generation. It solves the problem of name collision among other thing.
+Rust enables name mangling for functions by default. Since our entry point should be something
+the can be identified by linker, we need to make sure that compiler keeps the name of our function intact.
+
+With that, we have the following code in our `main.rs`.
+
+```rust
+#![no_std]
+#![no_main]
+
+use core::panic::PanicInfo;
+
+#[unsafe(no_mangle)]
+fn main() {
+    loop {}
+}
+
+#[panic_handler]
+fn panic(_info: &PanicInfo) -> ! {
+    loop {}
+}
+```
+
+We can go ahead and compile it. This time we are greeted with this lovely error message.
+
+```bash
+error: linking with `cc` failed: exit status: 1
+  |
+  = note:  "cc" "-m64" "/home/vikirna/Git/Expr/LexperienceDesMemoires/hello_no_std/target/debug/deps/rustcWMTcn6/symbols.o" "<1 object files omitted>" "-Wl,--as-needed" "-Wl,-Bstatic" "<sysroot>/lib/rustlib/x86_64-unknown-linux-gnu/lib/{libcore-*,libcompiler_builtins-*}.rlib" "-L" "/home/vikirna/Git/Expr/LexperienceDesMemoires/hello_no_std/target/debug/deps/rustcWMTcn6/raw-dylibs" "-Wl,-Bdynamic" "-B<sysroot>/lib/rustlib/x86_64-unknown-linux-gnu/bin/gcc-ld" "-fuse-ld=lld" "-Wl,--eh-frame-hdr" "-Wl,-z,noexecstack" "-L" "<sysroot>/lib/rustlib/x86_64-unknown-linux-gnu/lib" "-o" "/home/vikirna/Git/Expr/LexperienceDesMemoires/hello_no_std/target/debug/deps/hello_no_std-b002478b85c568ce" "-Wl,--gc-sections" "-pie" "-Wl,-z,relro,-z,now" "-nodefaultlibs"
+  = note: some arguments are omitted. use `--verbose` to show all linker arguments
+  = note: rust-lld: error: undefined symbol: __libc_start_main
+          >>> referenced by /nix/store/8kvxvr3pmsypxiypq4g8zy13glnfr7nx-glibc-2.42-67/lib/Scrt1.o:(_start)
+          collect2: error: ld returned 1 exit status
+```
+
+The important part is the line
+```rust
+undefined symbol: __libc_start_main >>> refrenced by /<nix store path of glibc/lib/Scrt1.o: (_start)
+```
+
+Okay, let's get over this quickly but you would do better if you watch the video I mentioned above along with 
+[The bits between the bits by Matt Godbolt](https://www.youtube.com/watch?v=dOfucXtyEsU).
+
+The actual entry point for our program start at the label `_start`[^3]. This `_start` seems to reference the 
+`__libc_start_main` at some point. This symbol is probabry defined int the c standard library. But since we 
+told rust not to link with standard library (which includes c standard library as well), we get this beautiful
+linker error.
+
+So, what do we do now?
+We could define `__libc_start_main` ourself. The full specification is [here](https://refspecs.linuxbase.org/LSB_3.1.0/LSB-generic/LSB-generic/baselib---libc-start-main-.html)
+and here is the function declaration:
+```c
+int __libc_start_main(
+  int *(main) (int, char * *, char * *), 
+  int argc, 
+  char * * ubp_av, 
+  void (*init) (void), 
+  void (*fini) (void), 
+  void (*rtld_fini) (void), 
+  void (* stack_end));
+```
+
+I think we should this of a better way. I mean all our problem occurs because `_start` references that symbol. What if we define our own `_start` symbol.
+What does `_start` even do?
+
+As it turns our, it does very important stuff like setting up the stack, move `argc` and `argv` to right places, prepare the call to `__libc_start_main` (whatever that is)
+among other things. These are all important things but for us they don't really matter now. 
+
+Since our program takes no input, gives no output, performs any calculations, takes no wife, holds no lands, fathers no children, wears no crown, win no glory, we can
+just rename our `main` fn to `_start`.
+
+If we do that, we get another linker error similar to the one above. This time the error is that there are two `_start` symbol one defined in the `Scrt1.o` and 
+one defined by use. Since we have no use of `_start` defined by the c runtime library, we need to tell that to the linker. But how?
+
+The [rustc book](https://doc.rust-lang.org/rustc/codegen-options/index.html#link-arg) has us covered.
+> On Unix-like targets that use cc as the linker driver, use -Clink-arg=-Wl,$ARG to pass an argument to the actual linker.
+
+Using cargo, we can pass arguments to rustc in `.cargo/config.toml` file.
+```toml
+[target.'cfg(target_os = "linux")']
+rustflags = ["-C", "link-arg=-nostartfiles"]
+```
+
+It is finally over. We are done.
+
+
+Thats all for today. Bye.
+
+
+
+wait a minute! Yes the program _is_ stuck but how do we know it's because of the `loop {}` and not because of some other cause and 
+how do we know our `panic_handler` function does get invoked when a panic occurs. And what about -
+
+Okay, okay, I get it. We need some way to confirm that our very empty program does what it's supposed to do.
+
+We tried so hard 
+
+
+## The no_std ecosystem
+
+## References
+- [OSDev Wiki: System Calls](https://wiki.osdev.org/System_Calls)
+- [Rust Reference: Panic](https://doc.rust-lang.org/reference/panic.html#panic)
+- [PanicInfo](https://doc.rust-lang.org/core/panic/struct.PanicInfo.html)
+- [Tracking issue for cleaning up core's and std's panic machinery](https://github.com/rust-lang/rust/issues/116005)
+- [Wikipedia: Name Mangling](https://en.wikipedia.org/wiki/Name_mangling)
+
+
+[^1]: https://www.felixcloutier.com/x86/syscall 
+[^2]: Not every target provides the `unwind` handler
