@@ -3,7 +3,7 @@ title: "All About no_std Rust"
 date: 2026-06-28
 shouldFeature: true
 excerpt: "The rust standard library provide various important functionalities. The no_std attribute is a way to opt out of all these functionalities. In this blog, I explain why we would want to do that and more importantly how."
-draft: true
+draft: false 
 tags: ["rust", "osdev"]
 ---
 
@@ -37,7 +37,7 @@ with hardware, running new programs, communicating with other programs among oth
 OSes implement syscalls is through a software interrupts. The client programs can
 invoke that system call using special instruction.
 
-For example, on x86_64 system, `SYSCALL` is used to invoke a syscall.[^1] This instruction has no operands and the required arguments, along with the syscall number (which identifies which syscall to invoke)
+For example, on x86_64 system, [`SYSCALL`](https://www.felixcloutier.com/x86/syscall) is used to invoke a syscall. This instruction has no operands and the required arguments, along with the syscall number (which identifies which syscall to invoke)
 is moved to appropriate registers before issuing the `SYSCALL` instruction.
 
 The standard libraries provide nice abstractions over these system calls making it
@@ -53,8 +53,9 @@ and many, many more.
 
 ## What and Why?
 So, what exactly is no_std?
+
 It's an attribute that tells rust to not link against the standard library.
-![Barry Series: What gif](../images/barry_what.gif)
+{/* ![Barry Series: What gif](../images/barry_what.gif) */}
 
 You might be wondering why would we not want to link against the standard library
 and miss out on all these awesome features.
@@ -67,7 +68,8 @@ So, when we write code that can't utilize operating system functionalities becau
 system is not what we want, then we can't link with standard library. This is the case when we are writing our own operating system or hypervisor or when we
 are writing code that directly runs on hardware like embedded systems.
 
-Let's do it. Let's write a program that uses the `no_std` attribute and see what we can come up with.
+To get a better understanding of what `no_std` is and how to use it, 
+let's write a program that uses the `no_std` attribute and see what we can come up with.
 
 ## How?
 We are going to see what it takes to write a rust program without using a standard library. We do need to decide what our program will be. We don't want anything fancy
@@ -116,7 +118,7 @@ up the data. There is another option which immediately aborts the program withou
 There is another aspect to panic handling in rust and that is the `panic_handler` attribute.
 This attribute is applied to a function to define the behavior of the panics.
 
-The standard library provides panic handler for both strategy: `unwind` and `abort`.[^2]
+The standard library provides panic handler for both strategy: `unwind` and `abort`.[^1]
 The default handler (when available) is the `unwind` handler.
 
 So by not linking with standard library, we also need to define our own `panic_handler` function.That is what the second error is talking about.
@@ -124,7 +126,7 @@ So by not linking with standard library, we also need to define our own `panic_h
 Let's go ahead and do that. According to the [reference](https://doc.rust-lang.org/reference/panic.html#the-panic_handler-attribute), the `panic_handler` attribute can only be applied to a
 function with signature `fn(&PanicInfo) -> !`.
 
-The `PanicInfo` is a structure that provides the function with information about the panic like
+The [`PanicInfo`](https://doc.rust-lang.org/core/panic/struct.PanicInfo.html) is a structure that provides the function with information about the panic like
 the message associated with the panic (the message given to `panic!` macro), the location information where the panic originated.
 
 So, what are we going to do in our panic function and what is that return type?
@@ -165,8 +167,8 @@ error: using `fn main` requires the standard library
 
 What do you mean using `fn main` requires standard library?
 
-In a typical rust binary, the `fn main` is the entry point to our program. But it is not the first piece of code that gets run. Far from it. I'm not yet qualified to explain the intricate details of everything that happens before the program actually gets to main. For that you can
-watch [this video](https://www.youtube.com/watch?v=q8irLfXwaFM)
+In a typical rust binary, the `fn main` is the entry point to our program. But it is not the first piece of code that gets run. Far from it. I'm not yet qualified to explain the intricate details of everything that happens before the program actually gets to main.
+You can check out the [More Resources](#more-resources) section below if you wanna know more.
 
 The gist of it is that c runtime sets up some stuff like stack initialization and things related to command line arguments then calls rust runtime. The rust runtime in turn sets up some
 additional stuff and only then is our main function is called.
@@ -222,8 +224,7 @@ The important part is the line
 undefined symbol: __libc_start_main >>> refrenced by /<nix store path of glibc/lib/Scrt1.o: (_start)
 ```
 
-Okay, let's get over this quickly but you would do better if you watch the video I mentioned above along with 
-[The bits between the bits by Matt Godbolt](https://www.youtube.com/watch?v=dOfucXtyEsU).
+Okay, let's get over this quickly but you would do better to check out [more resources](#more-resources) below.
 
 The actual entry point for our program start at the label `_start`. This `_start` seems to reference the 
 `__libc_start_main` at some point. This symbol is probably defined int the c standard library. But since we 
@@ -445,13 +446,33 @@ looping in panic
 
 We are finally done. I can sleep peacefully.
 
-## References
-- [OSDev Wiki: System Calls](https://wiki.osdev.org/System_Calls)
-- [Rust Reference: Panic](https://doc.rust-lang.org/reference/panic.html#panic)
-- [PanicInfo](https://doc.rust-lang.org/core/panic/struct.PanicInfo.html)
+## A Little Story
+As you can probably tell, I'm not an expert in Rust. I'm actually learning rust again (and more serious and focused this time) and this blog is 
+also part of my learning journey. That is to say, I wrote this stuff as I learn about them. 
+
+So the story (anecdote?) start after the minimal program that had nothing bot empty infinite loop build successfully. My initial thought to see if everything 
+was working correctly was to write an innocent looking `let _ = 1 + 1;` line inside the main loop to see that the program was actually looping. I would use debugger
+to check if it was. I tried to compile it. I got the same error as we got for the program with panic and write that we compiled without building core ourself.
+
+But that was because we called panic, thus invoking the unwind system through prebuilt core library. Why would a simple `1+1` result in the same error?
+I was stumped for quite some time. After a while, I remembered a very important aspect of integer arithmatic in rust. In order to confirm my suspicion, I tried 
+building the same program in release mode. As expected, no error. It built fine.
+
+In rust, simple integer arithmatic like add or subtract have very different behaviour based on the compilation profile (that is default debug or release build).
+On release mode, the interter overflow silently wraps around but on debug mode, program panics on integer overflow. So when we put the `1+1` code, in debug mode,
+the code for overflow check as well as the unwinding panic behaviour got included, thus causing the error. That is my guess at least.
+
+This behaviour of integer overflow is a very important thing to keep in mind when writing a rust program. This is especially true when writing unsafe rust where 
+we need to uphold [exception safety](https://doc.rust-lang.org/nomicon/exception-safety.html). 
+
+[^1]: Not every target provides the `unwind` handler
+
+
+## More Resources
+I might lack the ability to properly explain some of the stuff so here is my list of resource you 
+can check out to further explore more about these stuff.
+- [Rust Before Main by Ryan Levick](https://www.youtube.com/watch?v=q8irLfXwaFM)
+- [The bits between the bits by Matt Godbolt](https://www.youtube.com/watch?v=dOfucXtyEsU)
+- [Writing an OS in Rust: A Freestanding Rust Binary](https://os.phil-opp.com/freestanding-rust-binary/)
 - [Tracking issue for cleaning up core's and std's panic machinery](https://github.com/rust-lang/rust/issues/116005)
 - [Wikipedia: Name Mangling](https://en.wikipedia.org/wiki/Name_mangling)
-
-
-[^1]: https://www.felixcloutier.com/x86/syscall 
-[^2]: Not every target provides the `unwind` handler
