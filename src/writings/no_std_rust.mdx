@@ -23,7 +23,7 @@ providing functionalities like
 - Interaction with external system
 - Interaction with the operating system
 
-Beside these, standard library of some languages provide extra functionalities for
+Beside these, standard library of some languages provides extra functionalities for
 other common operations like
 - Parsing JSON, XML and other common data formats
 - Building a web server
@@ -60,12 +60,12 @@ You might be wondering why would we not want to link against the standard librar
 and miss out on all these awesome features.
 
 I said before that the standard library provided a nice abstraction on top of the features the operating system provides. Looking at it another way,
-the abstractions the standard library provides depends on operating system to function. Not just the abstractions, but collections like `Vec` uses
-allocator provided by the operating system.
+the abstractions the standard library provides depend on operating system to function. Not just the abstractions, but collections like `Vec` use
+an allocator provided by the operating system.
 
 So, when we write code that can't utilize operating system functionalities because either there is no operating system support or the support from operating
 system is not what we want, then we can't link with standard library. This is the case when we are writing our own operating system or hypervisor or when we
-are writing code that directly run on hardware like embedded systems.
+are writing code that directly runs on hardware like embedded systems.
 
 Let's do it. Let's write a program that uses the `no_std` attribute and see what we can come up with.
 
@@ -77,7 +77,7 @@ First of all, let's create a binary and run it to make sure everything is workin
 
 ```bash
 cargo new hello_no_std
-cd hello_new_std
+cd hello_no_std
 cargo run
 ```
 
@@ -106,7 +106,7 @@ The `println` macro is defined in the standard library so it can't find it now t
 But that is not a problem for us, we are just making a program that does nothing but loop forever, so we can
 just remove that line and replace with an infinite loop: `loop {}`.
 
-That leaves us with two error. Both are about panics.
+That leaves us with two errors. Both are about panics.
 
 So, what exactly is a panic?
 Panics are a mechanism in rust to handle unrecoverable errors, such as accessing an array out of bounds.
@@ -119,7 +119,7 @@ This attribute is applied to a function to define the behavior of the panics.
 The standard library provides panic handler for both strategy: `unwind` and `abort`.[^2]
 The default handler (when available) is the `unwind` handler.
 
-So by not linking with standard library, we also need to define our own `panic_handler` function.That is what the second error is taking about.
+So by not linking with standard library, we also need to define our own `panic_handler` function.That is what the second error is talking about.
 
 Let's go ahead and do that. According to the [reference](https://doc.rust-lang.org/reference/panic.html#the-panic_handler-attribute), the `panic_handler` attribute can only be applied to a
 function with signature `fn(&PanicInfo) -> !`.
@@ -182,7 +182,7 @@ rust and c runtime.
 It also says we should use `#![no_mangle]`. What is that?
 
 The compiler does something called name mangling which is to encode a unique name for symbols
-that are used during code generation. It solves the problem of name collision among other thing.
+that are used during code generation. It solves the problem of name collision among other things.
 Rust enables name mangling for functions by default. Since our entry point should be something
 the can be identified by linker, we need to make sure that compiler keeps the name of our function intact.
 
@@ -225,8 +225,8 @@ undefined symbol: __libc_start_main >>> refrenced by /<nix store path of glibc/l
 Okay, let's get over this quickly but you would do better if you watch the video I mentioned above along with 
 [The bits between the bits by Matt Godbolt](https://www.youtube.com/watch?v=dOfucXtyEsU).
 
-The actual entry point for our program start at the label `_start`[^3]. This `_start` seems to reference the 
-`__libc_start_main` at some point. This symbol is probabry defined int the c standard library. But since we 
+The actual entry point for our program start at the label `_start`. This `_start` seems to reference the 
+`__libc_start_main` at some point. This symbol is probably defined int the c standard library. But since we 
 told rust not to link with standard library (which includes c standard library as well), we get this beautiful
 linker error.
 
@@ -244,16 +244,16 @@ int __libc_start_main(
   void (* stack_end));
 ```
 
-I think we should this of a better way. I mean all our problem occurs because `_start` references that symbol. What if we define our own `_start` symbol.
+I think we should think of a better way. I mean all our problems occurs because `_start` references that symbol. What if we define our own `_start` symbol.
 What does `_start` even do?
 
-As it turns our, it does very important stuff like setting up the stack, move `argc` and `argv` to right places, prepare the call to `__libc_start_main` (whatever that is)
+As it turns out, it does very important stuff like setting up the stack, move `argc` and `argv` to right places, prepare the call to `__libc_start_main` (whatever that is)
 among other things. These are all important things but for us they don't really matter now. 
 
-Since our program takes no input, gives no output, performs any calculations, takes no wife, holds no lands, fathers no children, wears no crown, win no glory, we can
+Since our program takes no input, gives no output, performs no calculations, takes no wife, holds no lands, fathers no children, wears no crown, wins no glory, we can
 just rename our `main` fn to `_start`.
 
-If we do that, we get another linker error similar to the one above. This time the error is that there are two `_start` symbol one defined in the `Scrt1.o` and 
+If we do that, we get another linker error similar to the one above. This time the error is that there are two `_start` symbols one defined in the `Scrt1.o` and 
 one defined by use. Since we have no use of `_start` defined by the c runtime library, we need to tell that to the linker. But how?
 
 The [rustc book](https://doc.rust-lang.org/rustc/codegen-options/index.html#link-arg) has us covered.
@@ -268,19 +268,182 @@ rustflags = ["-C", "link-arg=-nostartfiles"]
 It is finally over. We are done.
 
 
-Thats all for today. Bye.
+That is all for today. Bye.
 
 
 
-wait a minute! Yes the program _is_ stuck but how do we know it's because of the `loop {}` and not because of some other cause and 
+
+
+Wait a minute! Yes the program _is_ stuck but how do we know it's because of the `loop {}` and not because of some other cause and 
 how do we know our `panic_handler` function does get invoked when a panic occurs. And what about -
 
 Okay, okay, I get it. We need some way to confirm that our very empty program does what it's supposed to do.
 
-We tried so hard 
+How do we do that is the question? We got rid of standard library. Remember when I said one of the functionality standard library provides 
+is the abstraction over underlying os's syscalls. We may have lost the access to standard library, but we still have syscall. (I am sure there are 
+other ways to confirm but I'm going with the easiest one.)
 
+I'm running linux on x86_64 so I can invoke syscall using the `syscall` instruction. You provide the syscall number associated with the syscall 
+you wanna call in register `rax` and then `syscall` instruction. The particular syscall may require various arguments as well. You need to load the arguments 
+in the appropriate place before the `syscall` instruction. The syscall we are going to use is the `write` syscall. For linux x86_64, it expects following 
+arguments in specified registers:
+- `rdi`: file descriptor of where we want to write
+- `rsi`: pointer to the data you want to write 
+- `rdx`: size of data in bytes you want to write 
 
-## The no_std ecosystem
+The syscall number of `write` is 1 so we load that into register `rax`. We want to write to standard output. On unix, when a program is started, the kernel opens three 
+files: standard input(0), standard output(1) and standard error(2). Thus, we also load 1 into register `rdi`. Now, we can use a fixed message and pass that to the 
+write syscall, but lets not do that. Instead, we will define a function that takes a `&str` and writes that to the stdout using the `write` syscall.
+
+```rust 
+fn write(msg: &str) {
+    let msg_ptr = msg.as_ptr();
+    let len = msg.len();
+    unsafe {
+        asm!(
+            "syscall",
+            in("rax") 1,
+            in("rdi") 1,
+            in("rsi") msg_ptr,
+            in("rdx") len,
+        )
+    }
+}
+```
+
+I'm not going to explain this code, but it should be pretty self-explanatory. If not, there will be links to inline assembly resources in [References](#references).
+
+With this, we can also check what those methods on `PanicInfo` do.
+
+```rust 
+pub extern "C" fn _start() {
+    write("_start\n");
+    panic!("oh no! something went wrong");
+    // loop {}
+}
+
+#[panic_handler]
+fn handle_panic(info: &PanicInfo) -> ! {
+    if let Some(msg) = info.message().as_str() {
+        write("panicked with message: ");
+        write(msg)
+    } else {
+        write("panicked");
+    }
+    if let Some(loc) = info.location() {
+        write(" in file: ");
+        write(loc.file());
+    }
+    write("\n");
+    loop {
+      write("looping in panic");
+    }
+}
+```
+
+With this in place, we should see
+```bash 
+_start
+panicked with message: oh no! something went wrong in file src/main.rs
+looping in panic
+looping in panic
+looping in panic
+looping in panic
+looping in panic
+looping in panic
+...
+```
+
+Let's see.
+
+```bash 
+[vikirna@hyprcube:~/Git/Expr/LexperienceDesMemoires/hello_no_std]$ cargo build
+   Compiling hello_no_std v0.1.0 (/home/vikirna/Git/Expr/LexperienceDesMemoires/hello_no_std)
+error: linking with `cc` failed: exit status: 1
+  |
+  = note:  "cc" "-m64" "/home/vikirna/Git/Expr/LexperienceDesMemoires/hello_no_std/target/debug/deps/rustc48b6Zq/symbols.o" "<7 object files omitted>" "-Wl,--as-needed" "-Wl,-Bstatic" "<sysroot>/lib/rustlib/x86_64-unknown-linux-gnu/lib/{libcore-*,libcompiler_builtins-*}.rlib" "-L" "/home/vikirna/Git/Expr/LexperienceDesMemoires/hello_no_std/target/debug/deps/rustc48b6Zq/raw-dylibs" "-Wl,-Bdynamic" "-B<sysroot>/lib/rustlib/x86_64-unknown-linux-gnu/bin/gcc-ld" "-fuse-ld=lld" "-Wl,--eh-frame-hdr" "-Wl,-z,noexecstack" "-L" "<sysroot>/lib/rustlib/x86_64-unknown-linux-gnu/lib" "-o" "/home/vikirna/Git/Expr/LexperienceDesMemoires/hello_no_std/target/debug/deps/hello_no_std-9d6afaf78908ca44" "-Wl,--gc-sections" "-pie" "-Wl,-z,relro,-z,now" "-nodefaultlibs" "-nostartfiles"
+  = note: some arguments are omitted. use `--verbose` to show all linker arguments
+  = note: rust-lld: error: undefined symbol: rust_eh_personality
+          >>> referenced by core.2a04ef4615689bd8-cgu.0
+          >>>               core-99c6fd12a66265d2.core.2a04ef4615689bd8-cgu.0.rcgu.o:(DW.ref.rust_eh_personality) in archive /nix/store/f3sg1gp2ybpdpxvpa14bjnfnqgvgnvlb-rust-mixed/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcore-99c6fd12a66265d2.rlib
+          collect2: error: ld returned 1 exit status
+```
+
+I thought we were done with linker error. But it's not standard library or c runtime this time. It's rust core library.
+
+I again quote rust's documentation.
+
+> The Rust Core Library is the dependency-free foundation of The Rust Standard Library. 
+> It is the portable glue between the language and its libraries, defining the intrinsic and 
+> primitive building blocks of all Rust code. It links to no upstream libraries, no system libraries, and no libc.
+
+If it doesn't link with anything, whats with the linker error. What is `rust_eh_personality`?
+The [documentation](https://doc.rust-lang.org/stable/core/index.html) tells us about that too.
+It says that it's a `eh_personality` [language item](https://doc.rust-lang.org/unstable-book/language-features/lang-items.html). This language 
+item is used by the failure mechanism of the compiler.
+This language item is used when unwinding stack during panic.
+
+![Wait a minute!](../images/wait_a_min.gif)
+
+Did we not define our own panic handler and told rust that we want to use `abort` not `unwind` panic handler. So what gives?
+
+We did tell rust to use abort. And it did. But just for our code. And as you can see in error message, the problem originates in the core library.
+The issue is that we are using a prebuilt core library, one that is built using `panic=unwind`. This was not a problem before in our program because we did not call 
+panic.
+
+So, what now? How do we make the core library use `panic=abort` as well. We can build the core library ourself. Cargo has `build-std` feature that enables it to 
+compile the standard library as part of the compilation graph thus using our `panic=abort` defined in `Cargo.toml`. It does require `rust-src` component and 
+`nightly` toolchain.
+
+```bash
+rustup component add rust-src --toolchain nightly
+```
+
+Now we can do 
+
+```bash 
+cargo +nightly build -Zbuild-std=core
+```
+
+and everything should be fin-
+
+What is it now?
+
+```bash 
+   Compiling compiler_builtins v0.1.160 (/nix/store/q85lwk7y3dhkh6wnncrc8g120z585j63-rust-mixed/lib/rustlib/src/rust/library/compiler-builtins/compiler-builtins)
+error: failed to run custom build command for `compiler_builtins v0.1.160 (/nix/store/q85lwk7y3dhkh6wnncrc8g120z585j63-rust-mixed/lib/rustlib/src/rust/library/compiler-builtins/compiler-builtins)`
+
+Caused by:
+  process didn't exit successfully: `/home/vikirna/Git/Expr/LexperienceDesMemoires/hello_no_std/target/debug/build/compiler_builtins-bcabfef799e6e207/build-script-build` (signal: 11, SIGSEGV: invalid memory reference)
+```
+
+{/* TODO: figure out why and explain */}
+
+I don't really know why but apparently the `rustflags` we defined in `.cargo/config.toml` applies to the build script for compiler-builtins as well causing the
+build command to fail. We can explicitly set the target to `cargo build` using `--target` which causes the `rustflags` to not be passed to build script.
+Hopefully, the final command we need to run is (at least in my case)
+
+```bash
+cargo +nightly build -Zbuild-std=core --target x86_64-unknown-linux-gnu
+./target/x86_64-unknown-linux-gnu/debug/hello_no_std
+```
+
+and the output 
+```bash 
+_start
+panicked with message: oh no! something went wrong in file: src/main.rs
+looping in panic
+looping in panic
+looping in panic
+looping in panic
+looping in panic
+looping in panic
+looping in panic
+...
+...
+```
+
+We are finally done. I can sleep peacefully.
 
 ## References
 - [OSDev Wiki: System Calls](https://wiki.osdev.org/System_Calls)
