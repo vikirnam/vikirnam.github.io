@@ -14,7 +14,7 @@ const { title, tags, date } = post.data;
 <div class="mb-10">
     <a
         href="/writings"
-        class="font-mono text-xs text-neutral-400 hover:text-purple-700 transition-colors mb-8 block"
+        class="font-mono text-xs text-neutral-400 hover:text-purple-700 transition-colors mb-8 flex gap-2"
     >
         <FaArrowLeft /> writings
     </a>
@@ -28,7 +28,7 @@ const { title, tags, date } = post.data;
     </h1>
 
     <div
-        class="font-mono text-xs text-neutral-400 pb-8 border-b border-neutral-200"
+        class="font-mono text-xs text-neutral-400 pb-8 border-b border-neutral-200 dark:border-neutral-800"
     >
         {date.toLocaleDateString()}
     </div>
