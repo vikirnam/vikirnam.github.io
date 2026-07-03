@@ -5,10 +5,59 @@ const { title } = Astro.props;
 ---
 
 <BaseLayout title={title}>
-    <div class="grid grid-cols-[1fr_200px] gap-14 items-start">
-        <slot name="article" />
-        <aside class="sticky top-6">
-            <slot name="sidebar" />
-        </aside>
+    <div class="post-layout gap-8 lg:gap-14">
+        <div class="area-header">
+            <slot name="header" />
+        </div>
+        <div class="area-toc lg:sticky lg:top-6">
+            <slot name="toc" />
+        </div>
+        <div class="area-article">
+            <slot name="article" />
+        </div>
+        <div class="area-related">
+            <slot name="related" />
+        </div>
     </div>
 </BaseLayout>
+
+<style>
+    .post-layout {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "header"
+            "toc"
+            "article"
+            "related";
+        min-width: 0;
+    }
+
+    @media (min-width: 1024px) {
+        .post-layout {
+            grid-template-columns: 1fr 200px;
+            align-items: start;
+            grid-template-areas:
+                "header header"
+                "article toc"
+                "article related";
+        }
+    }
+
+    .area-header {
+        grid-area: header;
+        min-width: 0;
+    }
+    .area-toc {
+        grid-area: toc;
+        min-width: 0;
+    }
+    .area-article {
+        grid-area: article;
+        min-width: 0;
+    }
+    .area-related {
+        grid-area: related;
+        min-width: 0;
+    }
+</style>

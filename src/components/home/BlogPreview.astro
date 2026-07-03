@@ -10,8 +10,18 @@ interface Props {
     recent: Writing[];
 }
 const { featured, recent } = Astro.props;
-const featured_length = featured.length;
-const recent_length = recent.length;
+
+// Tailwind needs full literal class strings at build time, so map
+// item counts to complete class strings rather than interpolating.
+const gridColsMap: Record<number, string> = {
+    0: "hidden",
+    1: "grid-cols-1",
+    2: "grid-cols-1 sm:grid-cols-2",
+    3: "grid-cols-1 sm:grid-cols-3",
+};
+
+const featuredCols = gridColsMap[featured.length] ?? "grid-cols-1";
+const recentCols = gridColsMap[recent.length] ?? "grid-cols-1";
 ---
 
 <section>
@@ -26,13 +36,13 @@ const recent_length = recent.length;
     </div>
 
     <div
-        class={`grid grid-cols-${featured_length} gap-px bg-neutral-200 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-800`}
+        class={`grid ${featuredCols} gap-px bg-neutral-200 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-800`}
     >
         {featured.map((post) => <PostCard post={post} />)}
     </div>
 
     <div
-        class={`grid grid-cols-${recent_length} gap-px bg-neutral-200 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-800 border-t-0`}
+        class={`grid ${recentCols} gap-px bg-neutral-200 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-800 border-t-0`}
     >
         {recent.map((post) => <PostSmall post={post} />)}
     </div>

@@ -38,12 +38,11 @@ const { post, relatedPosts } = Astro.props;
 const { Content, headings } = await render(post);
 
 ---
-
 <PostLayout title={post.data.title}>
+    <PostHeader slot="header" post={post} />
+
     <article slot="article">
-        <PostHeader post={post} />
-        <div
-            class="prose prose-neutral max-w-none
+        <div class="prose prose-neutral max-w-none
             prose-headings:font-medium prose-headings:tracking-tight prose-headings:text-neutral-900 dark:prose-headings:text-neutral-50
             prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
             prose-p:text-neutral-600 dark:prose-p:text-neutral-300 prose-p:leading-relaxed
@@ -53,6 +52,8 @@ const { Content, headings } = await render(post);
             prose-code:px-1.5 prose-code:rounded-sm prose-code:before:content-none
             prose-code:after:content-none
             prose-code:text-balance
+            prose-pre:overflow-x-auto prose-pre:-mx-4 sm:prose-pre:mx-0 prose-pre:rounded-none sm:prose-pre:rounded-md
+            prose-img:rounded-md
             prose-strong:text-neutral-900 dark:prose-strong:text-neutral-50 prose-strong:font-medium
             prose-li:text-neutral-600 dark:prose-li:text-neutral-300"
         >
@@ -60,10 +61,8 @@ const { Content, headings } = await render(post);
         </div>
     </article>
 
-    <aside slot="sidebar">
-        <TableOfContents headings={headings} />
-        <RelatedPosts posts={relatedPosts} />
-    </aside>
+    <TableOfContents slot="toc" headings={headings} />
+    <RelatedPosts slot="related" posts={relatedPosts} />
 </PostLayout>
 
 <style is:global>

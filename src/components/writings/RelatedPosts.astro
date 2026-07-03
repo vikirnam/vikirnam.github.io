@@ -8,7 +8,7 @@ interface Props {
 }
 const { posts } = Astro.props;
 ---
-
+{posts.length > 0 && 
 <div>
     <span
         class="font-mono text-xs uppercase tracking-widest text-neutral-400
@@ -21,7 +21,7 @@ const { posts } = Astro.props;
         {
             posts.map((post) => (
                 <a
-                    href={`/writing/${post.id}`}
+                    href={`/writings/${post.id}`}
                     class="py-3 border-b border-neutral-200 hover:bg-neutral-50
                transition-colors block"
                 >
@@ -41,3 +41,4 @@ const { posts } = Astro.props;
         }
     </div>
 </div>
+}

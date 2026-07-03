@@ -36,11 +36,11 @@ const { pageTitle } = Astro.props;
         <title>{pageTitle}</title>
     </head>
     <body
-        class="bg-white text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100"
+        class="flex min-h-screen flex-col bg-white text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100"
     >
         <Header />
 
-        <main class="max-w-4xl mx-auto px-6 pb-24">
+        <main class="w-full max-w-4xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24 flex-1">
             <slot />
         </main>
 
