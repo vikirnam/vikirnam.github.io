@@ -1,46 +1,47 @@
 @import "tailwindcss";
+@import 'katex/dist/katex.min.css';
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 .filter-btn {
-    @apply font-mono text-xs px-3 py-1.5 border border-neutral-200 rounded-sm text-neutral-400 cursor-pointer transition-colors hover:border-neutral-400 hover:text-neutral-600;
+  @apply font-mono text-xs px-3 py-1.5 border border-neutral-200 rounded-sm text-neutral-400 cursor-pointer transition-colors hover:border-neutral-400 hover:text-neutral-600;
 }
 
 .filter-btn.active {
-    @apply border-purple-500 text-purple-500 bg-purple-500/5;
+  @apply border-purple-500 text-purple-500 bg-purple-500/5;
 }
 
 @keyframes blink {
 
-    0%,
-    100% {
-        opacity: 1;
-    }
+  0%,
+  100% {
+    opacity: 1;
+  }
 
-    50% {
-        opacity: 0;
-    }
+  50% {
+    opacity: 0;
+  }
 }
 
 @layer base {
-    .eyebrow {
-        @apply font-mono text-[11px] tracking-widest uppercase text-purple-700 mb-4;
-    }
+  .eyebrow {
+    @apply font-mono text-[11px] tracking-widest uppercase text-purple-700 mb-4;
+  }
 
-    .divider {
-        @apply border-none border-t border-zinc-200 dark:border-zinc-800 my-10;
-    }
+  .divider {
+    @apply border-none border-t border-zinc-200 dark:border-zinc-800 my-10;
+  }
 
-    .prose-block p {
-        @apply text-base leading-relaxed text-zinc-500 dark:text-zinc-400 max-w-140;
-    }
+  .prose-block p {
+    @apply text-base leading-relaxed text-zinc-500 dark:text-zinc-400 max-w-140;
+  }
 
-    .prose-block p+p {
-        @apply mt-5;
-    }
+  .prose-block p+p {
+    @apply mt-5;
+  }
 
-    .prose-block strong {
-        @apply text-zinc-900 dark:text-zinc-100 font-medium;
-    }
+  .prose-block strong {
+    @apply text-zinc-900 dark:text-zinc-100 font-medium;
+  }
 }
