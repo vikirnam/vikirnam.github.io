@@ -6,10 +6,18 @@ import react from "@astrojs/react";
 
 import mdx from "@astrojs/mdx";
 
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+
 export default defineConfig({
   vite: {
     plugins: [tailwindcss()]
   },
 
-  integrations: [react(), mdx()]
+  integrations: [react(), mdx()],
+
+  markdown: {
+    remarkPlugins: [remarkMath],
+    rehypePlugins: [rehypeKatex]
+  }
 });
