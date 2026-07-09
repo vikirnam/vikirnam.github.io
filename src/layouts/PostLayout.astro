@@ -9,13 +9,13 @@ const { title } = Astro.props;
         <div class="area-header">
             <slot name="header" />
         </div>
-        <div class="area-toc lg:sticky lg:top-6">
+        <div class="area-toc">
             <slot name="toc" />
         </div>
         <div class="area-article">
             <slot name="article" />
         </div>
-        <div class="area-related">
+        <div class="area-related lg:sticky">
             <slot name="related" />
         </div>
     </div>
@@ -41,6 +41,16 @@ const { title } = Astro.props;
                 "header header"
                 "article toc"
                 "article related";
+        }
+
+        .area-toc {
+            position: sticky;
+            top: 6rem;
+        }
+
+        .area-related {
+            position: sticky;
+            top: 40rem;
         }
     }
 
