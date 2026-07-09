@@ -3,7 +3,7 @@ title: "A Problem A Day: Day 1"
 date: 2026-07-07
 shouldFeature: true
 excerpt: "A Problem A Day is back and this time it is more exciting that ever. All the problems are hard problems. All the solutions are in Rust exclusively. All the writings are raw and unedited. We begin our journey with sorting and priority queues."
-draft: true 
+draft: false 
 tags: ["rust", "dsa", "sorting", "priority-queue"]
 ---
 
@@ -102,4 +102,16 @@ algorithms, keeping code simple and minimum comes next.
 Having said that, our implementation shouldn't be that far off from an optimal one. At least for
 this particular problem with its constraints.
 
-Sorting the meetings takes
+Sorting the meetings takes $\mathcal{O}(m \log m )$, where `m` is the length of `meetings`. The inner loop runs at most `2n` times while the outer loop runs for a total of `m` time. So, the total time is $\mathcal{O}(m \log m + mn)$.
+
+In an ideal case, we would have access to a data structure that lets us extract the minimum
+value from it and insert a value into it in constant time. I don't think there is any thing that
+can give us those numbers, so the best we can do is probably min-heaps. They provide both of
+those operations in $\mathcal{O} (\log n)$ time.
+
+So, in the best time complexity we can hope for is $\mathcal{O}(m \log m + m \log n)$. Given
+the constraint that $1 \le n \le 100$, we are not that far off. Thus, we can put down our
+figurative pen (for me, it was a literal pen) and call it quits fo-
+
+## Priority Queue
+
