@@ -22,8 +22,8 @@ const { posts } = Astro.props;
             posts.map((post) => (
                 <a
                     href={`/writings/${post.id}`}
-                    class="py-3 border-b border-neutral-200 hover:bg-neutral-50
-               transition-colors block"
+                    class="py-3 border border-transparent hover:border-purple-700
+               transition-colors block px-1"
                 >
                     <ol class="flex gap-2 font-mono text-xs text-neutral-400">
                         {post.data.tags.map((tag) => (
