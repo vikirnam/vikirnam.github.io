@@ -114,4 +114,75 @@ the constraint that $1 \le n \le 100$, we are not that far off. Thus, we can put
 figurative pen (for me, it was a literal pen) and call it quits fo-
 
 ## Priority Queue
+For any meeting, there can be two conditions:
+- Either we have at least one room available. If so, we can just allocate the room with the
+lowest room number to the meeting.
+- There are no rooms available. In such case, the meeting will be delayed until at least one room
+becomes available. Here too, we need to select room with lowest room number if multiple rooms
+become available at the same time.
 
+These two different cases requires us to store the rooms in two different queues so that we can
+model both of these priorities. The first queue will store free rooms available at the start of
+each meetings using only the room number as the priority. The second queue will store occupied
+rooms based first on when those rooms will be available and then on the room number.
+
+By using these two queues, we have reduced our inner loops into following operations:
+- Remove any rooms from occupied queue that becomes available as of the meeting's start time (considering the delay). Since the room with the earliest end time will be stored at the top of
+queue, this is basically a repeated `extract-min` operation as long as the room's end time is
+less than or equal to the current meeting's start time.
+
+- Check if there are free rooms available. If there are, pop from the free queue and push it
+to the occupied queue after updating the room with the current meeting's details and
+incrementing the count.
+
+- If no free rooms are available, pop from the occupied queue and update its details and
+increment its count and push it back to occupied queue.
+
+```rust
+fn most_booked(n: i32, mut meetings: Vec<Vec<i32>>) -> i32 {
+    meetings.sort_by(|m1, m2| m1[0].cmp(&m2[0]));
+    let mut counts = vec![0; n as usize];
+    let mut free = BinaryHeap::with_capacity(n as usize);
+    let mut occupied: BinaryHeap<Reverse<(usize, usize)>> = BinaryHeap::with_capacity(n as usize);
+
+    for i in 0..(n as usize) {
+        free.push(Reverse(i));
+    }
+    for meeting in meetings {
+        while !occupied.is_empty() && occupied.peek().unwrap().0.0 <= meeting[0] as usize {
+            free.push(Reverse(occupied.pop().unwrap().0.1));
+        }
+
+        if !free.is_empty() {
+            let room_idx = free.pop().unwrap().0;
+            counts[room_idx] += 1;
+            occupied.push(Reverse((meeting[1] as usize, room_idx)));
+        } else {
+            let (end_time, idx) = occupied.pop().unwrap().0;
+            counts[idx] += 1;
+            occupied.push(Reverse((
+                end_time + meeting[1] as usize - meeting[0] as usize,
+                idx,
+            )));
+        }
+    }
+    let mut max = 0;
+    let mut max_idx = 0;
+    for (i, count) in counts.into_iter().enumerate() {
+        if count > max {
+            max = count;
+            max_idx = i;
+        }
+    }
+    max_idx as i32
+}
+```
+
+And that is it.
+
+I have a [repository](https://github.com/vikirnam/AProblemADay) for all the codes for this problem
+and all other problems of the future Apad blogs as well as for problems I decided not to write blog for. These code might contains extra stuff. For example,
+the solution for today's problem involved an incorrect intermediate implementation where I didn't
+separate the rooms into two queues. I also have some extra code where I use [nom crate](https://docs.rs/nom/latest/nom/) to parse input for this problem. (I'm learning `nom` passively so I wanna use any opportunity to incorporate it.)
+
+Bye.
