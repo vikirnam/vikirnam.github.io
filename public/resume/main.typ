@@ -83,7 +83,7 @@
     c1: "2025-2026",
     c2: text(
       tracking: -0.1pt,
-    )[A Read/Write Overlay Filesystem Support in a Microkernel Based Operating System (Ongoing)],
+    )[A Read/Write Overlay Filesystem Support in a Microkernel Based Operating System],
     c3: "Purwanchal Campus, Dharan, Nepal",
     body: [Currently working on developing Overlay(Union) File System for Redox OS. It combines multiple different mount points of an existing filesystem into one, resulting in a single directory structure that contains underlying files and sub-directories from all sources.],
   ),
