@@ -1,5 +1,5 @@
 ---
-title: "A Problem A Day: Day 1"
+title: "Percolation"
 date: 2026-07-17
 shouldFeature: true
 excerpt: "A Problem A Day is back and this time it is more exciting that ever. All the problems are hard problems. All the solutions are in Rust exclusively. All the writings are raw and unedited. We begin our journey with sorting and priority queues."
