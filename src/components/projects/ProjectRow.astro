@@ -21,7 +21,7 @@ const { project } = Astro.props;
             {project.name}
             {
                 project.title && (
-                    <span class="text-neutral-400 font-normal text-sm">
+                    <span class="text-neutral-700 dark:text-neutral-400 font-bold text-[16px]">
                         : {project.title}
                     </span>
                 )
@@ -29,7 +29,7 @@ const { project } = Astro.props;
         </h3>
 
         <ol
-            class="flex gap-1.5 font-mono text-[10px] text-neutral-400 dark:text-neutral-500"
+            class="flex gap-1.5 font-mono text-[14px] text-neutral-400 dark:text-neutral-500"
         >
             {
                 project.stack.map((tech) => (
@@ -42,7 +42,7 @@ const { project } = Astro.props;
     </div>
 
     <p
-        class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed mt-1.5"
+        class="text-[14px] text-neutral-600 dark:text-neutral-400 leading-relaxed mt-1.5"
     >
         {project.description}
     </p>
